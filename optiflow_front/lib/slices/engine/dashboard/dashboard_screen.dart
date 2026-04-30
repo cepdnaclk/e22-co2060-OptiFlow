@@ -8,6 +8,7 @@ import 'package:optiflow_scheduler/slices/engine/dashboard/widgets/utilization_c
 import 'package:optiflow_scheduler/slices/admin/machines_screen.dart';
 import 'package:optiflow_scheduler/slices/engine/schedule_screen.dart';
 import 'package:optiflow_scheduler/slices/order/placeholder_screen.dart';
+import 'package:optiflow_scheduler/slices/engine/jobs_screen.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -100,10 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 2:
         return const ScheduleScreen();
       case 3:
-        return const PlaceholderScreen(
-          title: "Jobs",
-          icon: Icons.inventory_2_outlined,
-        );
+        return const JobsScreen();
       case 4:
         return const PlaceholderScreen(
           title: "Team",

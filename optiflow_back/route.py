@@ -6,11 +6,11 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 
 # Import the database connection Sulakshan built
-from app.database import supabase 
+from databse import supabase 
 
 # Import all the Pydantic data models (validation rules) Sulakshan built
-from app.models import * # Import Rashad's optimization engine
-from app.optimizer import run_optimization_engine 
+from models import * # Import Rashad's optimization engine
+from optimizer import run_optimization_engine 
 
 # Create the router object. This is like a mini-FastAPI app that we can 
 # plug into the main.py file later.
