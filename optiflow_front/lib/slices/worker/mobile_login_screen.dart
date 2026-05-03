@@ -12,9 +12,9 @@ class MobileLoginScreen extends StatefulWidget {
 class _MobileLoginScreenState extends State<MobileLoginScreen> {
   // Hardcoded resources for demo purposes
   final List<Map<String, String>> _resources = [
-    {'id': 'resource-uuid-1', 'name': 'Machine Operator A', 'role': 'Folding'},
-    {'id': 'resource-uuid-2', 'name': 'Printer B', 'role': 'Printing'},
-    {'id': 'resource-uuid-3', 'name': 'Cutter C', 'role': 'Cutting'},
+    {'id': '1e9d1f7e-1234-4a5b-8c6d-9e8f7a6b5c4d', 'name': 'Machine Operator A', 'role': 'Folding'},
+    {'id': '2f8e2a6d-2345-5b6c-9d7e-0f1e2a3b4c5d', 'name': 'Printer B', 'role': 'Printing'},
+    {'id': '3a7d3b5c-3456-6c7d-0e8f-1f2e3a4b5c6e', 'name': 'Cutter C', 'role': 'Cutting'},
   ];
 
   void _selectResource(String resourceId) {
