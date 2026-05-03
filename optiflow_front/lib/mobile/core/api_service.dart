@@ -18,7 +18,7 @@ class ApiService {
   static final ApiService instance = ApiService._();
 
   // Android Emulator uses 10.0.2.2 to reach the host machine's localhost.
-  static const String _base = 'http://10.0.2.2:8000';
+  static const String _base = 'https://e22-co2060-optiflow.onrender.com';
 
   /// Build HTTP headers with optional Bearer auth token.
   Map<String, String> _headers({bool auth = true}) {

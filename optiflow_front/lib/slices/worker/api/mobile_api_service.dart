@@ -4,7 +4,7 @@ import '../models/task_model.dart';
 
 class MobileApiService {
   // Use 10.0.2.2 for Android Emulator, or localhost / specific IP for physical devices.
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'https://e22-co2060-optiflow.onrender.com/api';
 
   Future<List<WorkerTask>> fetchTasks(String resourceId) async {
     try {

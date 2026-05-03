@@ -19,7 +19,7 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
   String? errorMessage;
 
   // Use 10.0.2.2 for Android Emulator to connect to localhost:8000
-  final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = 'https://e22-co2060-optiflow.onrender.com/api';
 
   @override
   void initState() {

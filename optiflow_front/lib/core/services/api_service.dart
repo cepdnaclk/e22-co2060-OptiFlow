@@ -10,9 +10,9 @@ class ApiService {
     if (!kIsWeb) {
       // If we are native (e.g. Android Emulator), you might need 10.0.2.2.
       // But for desktop/web, 127.0.0.1 is standard.
-      return "http://127.0.0.1:8000/api";
+      return "https://e22-co2060-optiflow.onrender.com/api";
     }
-    return "http://127.0.0.1:8000/api";
+    return "https://e22-co2060-optiflow.onrender.com/api";
   }
 
   // ==========================================
@@ -238,7 +238,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/book_machine"),
+        Uri.parse("$baseUrl/book_machine"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "machine_id": machineId,
