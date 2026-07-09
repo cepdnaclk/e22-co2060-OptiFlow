@@ -134,28 +134,39 @@ class ApiService {
       final response = await http.get(Uri.parse("$baseUrl/schedule"));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map<Booking>((json) {
-          final startTime = json['scheduled_start_time'] != null 
-              ? DateTime.parse(json['scheduled_start_time']).toLocal()
+        final List<Booking> bookings = [];
+
+        for (final item in data) {
+          // Skip tasks that have not been assigned to a resource yet
+          // (unoptimized tasks) — they would render as empty Gantt blocks.
+          final resourceId = item['assigned_resource_id']?.toString();
+          if (resourceId == null || resourceId.isEmpty) continue;
+
+          final startTime = item['scheduled_start_time'] != null
+              ? DateTime.parse(item['scheduled_start_time']).toLocal()
               : DateTime.now();
-          final endTime = json['scheduled_end_time'] != null 
-              ? DateTime.parse(json['scheduled_end_time']).toLocal()
+          final endTime = item['scheduled_end_time'] != null
+              ? DateTime.parse(item['scheduled_end_time']).toLocal()
               : startTime.add(const Duration(hours: 1));
-          
-          final int duration = endTime.difference(startTime).inHours;
-          
-          return Booking(
-            id: json['id']?.toString() ?? '',
-            machineId: json['assigned_resource_id']?.toString() ?? '',
-            machineName: json['resources']?['name']?.toString() ?? 'Unknown Resource',
-            jobTitle: json['jobs']?['title']?.toString() ?? json['name']?.toString() ?? 'Unknown Job',
-            userName: 'System', // Hardcoded until user auth is added
-            startTime: startTime,
-            durationHours: duration > 0 ? duration : 1, // ensure at least 1 hour block for UI visibility
-            priority: 'Medium', // Defaulting to Medium
-            status: json['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
-          );
-        }).toList();
+
+          // Use minutes for better resolution; Gantt renders in hours but
+          // ensure at least 1 hour block so tiny tasks are still visible.
+          final durationMinutes = endTime.difference(startTime).inMinutes;
+          final durationHours   = (durationMinutes / 60).ceil().clamp(1, 24);
+
+          bookings.add(Booking(
+            id:           item['id']?.toString() ?? '',
+            machineId:    resourceId,
+            machineName:  item['resources']?['name']?.toString() ?? 'Unknown Resource',
+            jobTitle:     item['jobs']?['title']?.toString() ?? item['name']?.toString() ?? 'Unknown Job',
+            userName:     'System',
+            startTime:    startTime,
+            durationHours: durationHours,
+            priority:     'Medium',
+            status:       item['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
+          ));
+        }
+        return bookings;
       } else {
         throw Exception("Failed to load schedule");
       }
@@ -164,6 +175,7 @@ class ApiService {
       return [];
     }
   }
+
 
   Future<List<Map<String, dynamic>>> fetchHumanResources() async {
     try {

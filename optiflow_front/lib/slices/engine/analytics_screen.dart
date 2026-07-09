@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 import 'package:optiflow_scheduler/slices/engine/dashboard/widgets/stat_card.dart';
 import 'package:optiflow_scheduler/core/services/api_service.dart';
-import 'package:optiflow_scheduler/core/models/job.dart';
 import 'package:optiflow_scheduler/core/models/machine.dart';
 
 class AnalyticsScreen extends StatefulWidget {

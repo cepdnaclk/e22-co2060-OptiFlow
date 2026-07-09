@@ -61,12 +61,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Command Center / Precision SaaS dark theme — applied to the desktop shell.
+    final desktopTheme = ThemeData.dark().copyWith(
+      scaffoldBackgroundColor: const Color(0xFF141518),
+      colorScheme: const ColorScheme.dark(
+        primary:   Color(0xFF5E6AD2),
+        secondary: Color(0xFF8B75D7),
+        surface:   Color(0xFF1A1B1E),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(const Color(0xFF2C2C2E)),
+        radius: const Radius.circular(4),
+        thickness: WidgetStateProperty.all(4),
+      ),
+    );
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'OptiFlow',
-      // Apply the Airbnb-style theme only on mobile.
-      // The desktop theme is managed by the existing engine slice.
-      theme: AppTheme.theme,
+      theme:      AppTheme.theme,
+      darkTheme:  desktopTheme,
+      themeMode:  ThemeMode.dark,
       home: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= 600) {
@@ -78,4 +93,5 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+
 }

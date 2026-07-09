@@ -18,94 +18,92 @@ class Sidebar extends StatefulWidget {
 class _SidebarState extends State<Sidebar> {
   int? _hoveredIndex;
 
+  // (index, icon, label, sectionHeader)
+  static const _navItems = [
+    (0,  Icons.dashboard_rounded,               'Dashboard',  'OVERVIEW'),
+    (5,  Icons.analytics_rounded,               'Analytics',  null),
+    (1,  Icons.precision_manufacturing_rounded,  'Machines',   'OPERATIONS'),
+    (3,  Icons.inventory_2_rounded,             'Jobs',       null),
+    (2,  Icons.calendar_month_rounded,          'Schedule',   null),
+    (4,  Icons.people_rounded,                  'Team',       'ADMIN'),
+    (6,  Icons.settings_rounded,               'Settings',   null),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          right: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5), width: 1),
-        ),
+      width: 220,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(right: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Column(
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildLogo(),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               physics: const BouncingScrollPhysics(),
-              children: [
-                _buildSectionLabel("OVERVIEW"),
-                _buildMenuItem(0, Icons.dashboard_rounded, "Dashboard"),
-                _buildMenuItem(5, Icons.analytics_rounded, "Analytics"),
-                const SizedBox(height: 24),
-                _buildSectionLabel("OPERATIONS"),
-                _buildMenuItem(1, Icons.print_rounded, "Machines"),
-                _buildMenuItem(3, Icons.inventory_2_rounded, "Jobs"),
-                _buildMenuItem(2, Icons.calendar_month_rounded, "Schedule"),
-                const SizedBox(height: 24),
-                _buildSectionLabel("ADMIN"),
-                _buildMenuItem(4, Icons.people_rounded, "Team"),
-                _buildMenuItem(6, Icons.settings_rounded, "Settings"),
-              ],
+              itemCount: _navItems.length,
+              itemBuilder: (ctx, i) {
+                final item = _navItems[i];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (item.$4 != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 24, top: 20, bottom: 8),
+                        child: Text(
+                          item.$4!,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    _buildNavItem(item.$1, item.$2, item.$3),
+                  ],
+                );
+              },
             ),
           ),
+          _buildSystemStatus(),
           _buildBottomProfile(),
         ],
       ),
     );
   }
 
-  Widget _buildSectionLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 32, bottom: 12, top: 8),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: AppColors.textSecondary.withOpacity(0.5),
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.5,
-        ),
-      ),
-    );
-  }
-
   Widget _buildLogo() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           Container(
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
+            clipBehavior: Clip.hardEdge,
+            padding: const EdgeInsets.all(4),
             child: Image.asset(
-              "assets/images/logo.png",
-              height: 48,
-              width: 48,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.blur_circular, color: AppColors.primary, size: 48);
-              },
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           const Text(
-            "OptiFlow",
+            'OptiFlow',
             style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
-              letterSpacing: -1,
+              letterSpacing: -0.5,
             ),
           ),
         ],
@@ -113,53 +111,53 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _buildMenuItem(int index, IconData icon, String title) {
-    final bool isSelected = widget.selectedIndex == index;
-    final bool isHovered = _hoveredIndex == index;
+  Widget _buildNavItem(int index, IconData icon, String title) {
+    final isSelected = widget.selectedIndex == index;
+    final isHovered  = _hoveredIndex == index;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: MouseRegion(
         onEnter: (_) => setState(() => _hoveredIndex = index),
-        onExit: (_) => setState(() => _hoveredIndex = null),
+        onExit:  (_) => setState(() => _hoveredIndex = null),
+        cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () => widget.onItemSelected(index),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: isSelected ? AppColors.primaryGradient : null,
-              color: isSelected 
-                  ? null 
-                  : (isHovered ? AppColors.surfaceLight.withOpacity(0.5) : Colors.transparent),
+              borderRadius: BorderRadius.circular(8),
+              color: isSelected
+                  ? AppColors.surfaceLight
+                  : isHovered
+                      ? AppColors.surfaceLight.withOpacity(0.5)
+                      : Colors.transparent,
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? Colors.white : (isHovered ? AppColors.textPrimary : AppColors.textSecondary),
-                  size: 22,
+                  size: 18,
+                  color: isSelected
+                      ? AppColors.textPrimary
+                      : isHovered
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Text(
                   title,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : (isHovered ? AppColors.textPrimary : AppColors.textSecondary),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    fontSize: 15,
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected
+                        ? AppColors.textPrimary
+                        : isHovered
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                   ),
                 ),
-                const Spacer(),
-                if (isSelected)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -168,41 +166,74 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
-  Widget _buildBottomProfile() {
+  Widget _buildSystemStatus() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5), width: 1),
-        ),
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: AppColors.primary.withOpacity(0.2),
-            child: const Icon(Icons.person, color: AppColors.primary),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.matteGreen,
+              shape: BoxShape.circle,
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
+          const Text(
+            'System Online',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomProfile() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 18),
+          ),
+          const SizedBox(width: 10),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Admin User",
+                  'Admin',
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  "admin@optiflow.com",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
+                  'Factory Manager',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

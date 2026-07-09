@@ -149,20 +149,20 @@ def seed_database():
 
     tasks = [
         # Job 1 Tasks
-        {"id": t1_1, "job_id": j1, "operation_type_id": op_print_color, "resource_id": m2, "name": "Color Printing Cover", "status": "COMPLETED", "quantity_to_process": 5000, "scheduled_start_time": time_today(9, 0), "scheduled_end_time": time_today(11, 0), "completed_at": (now - timedelta(hours=2)).isoformat()},
-        {"id": t1_2, "job_id": j1, "operation_type_id": op_print_bw, "resource_id": m1, "name": "B/W Printing Inner Pages", "status": "IN_PROGRESS", "quantity_to_process": 5000, "scheduled_start_time": time_today(12, 0), "scheduled_end_time": time_today(16, 0)},
-        {"id": t1_3, "job_id": j1, "operation_type_id": op_bind, "resource_id": m4, "name": "Perfect Binding", "status": "PENDING", "quantity_to_process": 5000, "scheduled_start_time": time_today(13, 0), "scheduled_end_time": time_today(15, 0)},
+        {"id": t1_1, "job_id": j1, "operation_type_id": op_print_color, "assigned_resource_id": m2, "name": "Color Printing Cover", "status": "COMPLETED", "quantity_to_process": 5000, "scheduled_start_time": time_today(9, 0), "scheduled_end_time": time_today(11, 0), "completed_at": (now - timedelta(hours=2)).isoformat()},
+        {"id": t1_2, "job_id": j1, "operation_type_id": op_print_bw, "assigned_resource_id": m1, "name": "B/W Printing Inner Pages", "status": "IN_PROGRESS", "quantity_to_process": 5000, "scheduled_start_time": time_today(12, 0), "scheduled_end_time": time_today(16, 0)},
+        {"id": t1_3, "job_id": j1, "operation_type_id": op_bind, "assigned_resource_id": m4, "name": "Perfect Binding", "status": "PENDING", "quantity_to_process": 5000, "scheduled_start_time": time_today(13, 0), "scheduled_end_time": time_today(15, 0)},
         
         # Job 2 Tasks
-        {"id": t2_1, "job_id": j2, "operation_type_id": op_print_color, "resource_id": m2, "name": "Report Printing", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 0), "scheduled_end_time": time_today(9, 0), "completed_at": (now - timedelta(days=1)).isoformat()},
-        {"id": t2_2, "job_id": j2, "operation_type_id": op_cut, "resource_id": m3, "name": "Trimming Edges", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 30), "scheduled_end_time": time_today(9, 30), "completed_at": (now - timedelta(days=1, hours=-2)).isoformat()},
-        {"id": t2_3, "job_id": j2, "operation_type_id": op_bind, "resource_id": m4, "name": "Final Binding", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 0), "scheduled_end_time": time_today(10, 0), "completed_at": (now - timedelta(hours=5)).isoformat()},
+        {"id": t2_1, "job_id": j2, "operation_type_id": op_print_color, "assigned_resource_id": m2, "name": "Report Printing", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 0), "scheduled_end_time": time_today(9, 0), "completed_at": (now - timedelta(days=1)).isoformat()},
+        {"id": t2_2, "job_id": j2, "operation_type_id": op_cut, "assigned_resource_id": m3, "name": "Trimming Edges", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 30), "scheduled_end_time": time_today(9, 30), "completed_at": (now - timedelta(days=1, hours=-2)).isoformat()},
+        {"id": t2_3, "job_id": j2, "operation_type_id": op_bind, "assigned_resource_id": m4, "name": "Final Binding", "status": "COMPLETED", "quantity_to_process": 1000, "scheduled_start_time": time_today(8, 0), "scheduled_end_time": time_today(10, 0), "completed_at": (now - timedelta(hours=5)).isoformat()},
         
         # Job 3 Task
-        {"id": t3_1, "job_id": j3, "operation_type_id": op_large, "resource_id": m5, "name": "Banner Printing", "status": "PENDING", "quantity_to_process": 200},
+        {"id": t3_1, "job_id": j3, "operation_type_id": op_large, "assigned_resource_id": m5, "name": "Banner Printing", "status": "PENDING", "quantity_to_process": 200},
 
         # Job 4 Task (Conflict! Overlaps with t1_3 on m4)
-        {"id": t4_1, "job_id": j4, "operation_type_id": op_bind, "resource_id": m4, "name": "Rush Job Binding", "status": "PENDING", "quantity_to_process": 10000, "scheduled_start_time": time_today(14, 0), "scheduled_end_time": time_today(16, 0)},
+        {"id": t4_1, "job_id": j4, "operation_type_id": op_bind, "assigned_resource_id": m4, "name": "Rush Job Binding", "status": "PENDING", "quantity_to_process": 10000, "scheduled_start_time": time_today(14, 0), "scheduled_end_time": time_today(16, 0)},
     ]
     client.table("tasks").insert(tasks).execute()
     print("Inserted Tasks with schedule bookings.")

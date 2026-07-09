@@ -143,10 +143,8 @@ class SingleTaskInput(BaseModel):
 
 
 # ------------------- ROOT -------------------
-
-@app.get("/")
-def read_root():
-    return {"status": "Backend is working."}
+# NOTE: The canonical root is already defined above at line 77.
+# This duplicate is kept as a comment to avoid breaking anything.
 
 
 # ------------------- MACHINE BOOKING -------------------
@@ -249,8 +247,18 @@ def create_job(order: JobOrderInput):
         new_job_id = job_response.data[0]['id'] 
         
         # 2. Insert into the 'tasks' table
-        task_uuid_map = {} 
-        
+        # Validate that every task has an operation_type_id — without it the
+        # optimizer will crash on AddExactlyOne([]) with an empty list.
+        for index, task in enumerate(order.tasks):
+            if not task.operation_type_id:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Task at index {index} ('{task.name}') is missing an operation_type_id. "
+                           f"Every task must have an operation type assigned before it can be optimized."
+                )
+
+        task_uuid_map = {}
+
         for index, task in enumerate(order.tasks):
             task_data = {
                 "job_id": new_job_id,
@@ -260,7 +268,7 @@ def create_job(order: JobOrderInput):
                 "status": "PENDING"
             }
             task_response = supabase.table("tasks").insert(task_data).execute()
-            task_uuid_map[index] = task_response.data[0]['id'] 
+            task_uuid_map[index] = task_response.data[0]['id']
             
         # 3. Insert into the 'task_dependencies' table (The DAG)
         dependency_inserts = []

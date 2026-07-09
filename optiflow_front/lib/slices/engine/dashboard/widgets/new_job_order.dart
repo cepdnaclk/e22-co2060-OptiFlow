@@ -199,13 +199,19 @@ class _NewJobOrderState extends State<NewJobOrder> {
     setState(() { _isSubmitting = true; });
 
     List<Map<String, dynamic>> tasksData = [];
-    for (var task in _tasks) {
-      if (task.operationType == null) {
+    for (int i = 0; i < _tasks.length; i++) {
+      final task = _tasks[i];
+      // Guard: every task MUST have an operation type — without it the
+      // CP-SAT optimizer crashes on AddExactlyOne([]) with an empty list.
+      if (task.operationType == null || task.operationType!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please select an operation type for all tasks'),
+            SnackBar(
+              content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}" '
+                  'has no operation type selected. Please assign one before submitting.'),
               backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -215,10 +221,11 @@ class _NewJobOrderState extends State<NewJobOrder> {
       tasksData.add({
         'name': task.nameController.text.isNotEmpty ? task.nameController.text : "Task ${task.id}",
         'operation_type_id': task.operationType,
-        'quantity_to_process': int.tryParse(task.quantityController.text) ?? 
+        'quantity_to_process': int.tryParse(task.quantityController.text) ??
                                int.tryParse(_totalQuantityController.text) ?? 0,
       });
     }
+
 
     List<Map<String, dynamic>> dependencies = [];
     for (int i = 0; i < _tasks.length; i++) {
@@ -589,6 +596,7 @@ class _NewJobOrderState extends State<NewJobOrder> {
                       child: _isLoadingOps 
                         ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                         : DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: task.operationType,
                         decoration: _customInputDecoration('Operation Type', null),
                         dropdownColor: AppColors.surfaceLight,
@@ -597,7 +605,7 @@ class _NewJobOrderState extends State<NewJobOrder> {
                         items: _operationTypes.map((op) {
                               return DropdownMenuItem<String>(
                                 value: op['id'].toString(),
-                                child: Text(op['name'].toString()),
+                                child: Text(op['name'].toString(), overflow: TextOverflow.ellipsis),
                               );
                             }).toList(),
                         onChanged: (newValue) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 
+/// Precision SaaS stat card — flat, thin bordered, clean typography.
 class StatCard extends StatefulWidget {
   final String title;
   final String value;
@@ -8,7 +9,7 @@ class StatCard extends StatefulWidget {
   final Color iconColor;
   final double percentage;
   final String comparisonText;
-  final bool isIncreasePositive; 
+  final bool isIncreasePositive;
 
   const StatCard({
     super.key,
@@ -28,37 +29,35 @@ class StatCard extends StatefulWidget {
 class _StatCardState extends State<StatCard> {
   bool _isHovering = false;
 
+  void _onHover(bool hovering) {
+    setState(() => _isHovering = hovering);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isPositiveChange = widget.percentage >= 0;
-    final color = (isPositiveChange == widget.isIncreasePositive)
-        ? AppColors.success
-        : AppColors.error;
+    final isPositive = widget.percentage >= 0;
+    final trendColor = (isPositive == widget.isIncreasePositive)
+        ? AppColors.matteGreen
+        : AppColors.matteRed;
+    final accent = widget.iconColor;
 
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
+      onEnter: (_) => _onHover(true),
+      onExit:  (_) => _onHover(false),
+      cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: _isHovering ? AppColors.surfaceLight : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: _isHovering ? AppColors.accent.withOpacity(0.5) : Colors.transparent,
+            color: _isHovering ? accent.withOpacity(0.5) : AppColors.border,
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: _isHovering ? AppColors.accent.withOpacity(0.2) : Colors.black.withOpacity(0.2),
-              blurRadius: _isHovering ? 20 : 10,
-              offset: const Offset(0, 8),
-            ),
-          ],
         ),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -68,69 +67,74 @@ class _StatCardState extends State<StatCard> {
                     widget.title,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: widget.iconColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: widget.iconColor.withOpacity(0.3)),
+                    color: accent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: accent.withOpacity(0.2)),
                   ),
-                  child: Icon(widget.icon, color: widget.iconColor, size: 20),
+                  child: Icon(widget.icon, color: accent, size: 14),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               widget.value,
               style: const TextStyle(
                 fontSize: 32,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.5,
+                letterSpacing: -1,
               ),
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isPositiveChange ? Icons.trending_up : Icons.trending_down,
-                        color: color,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "${widget.percentage.abs()}%",
-                        style: TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                if (widget.percentage != 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: trendColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isPositive
+                              ? Icons.arrow_upward_rounded
+                              : Icons.arrow_downward_rounded,
+                          color: trendColor,
+                          size: 10,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.percentage.abs().toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            color: trendColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     widget.comparisonText,
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      fontSize: 11,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

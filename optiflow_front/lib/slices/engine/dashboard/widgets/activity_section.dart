@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 import 'package:optiflow_scheduler/core/services/supabase_service.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LIVE ALERTS — Command Center style
+// ─────────────────────────────────────────────────────────────────────────────
 class LiveAlerts extends StatefulWidget {
   const LiveAlerts({super.key});
 
@@ -25,8 +28,8 @@ class _LiveAlertsState extends State<LiveAlerts> {
     if (mounted) {
       setState(() {
         _offlineMachines = (stats['offline_machines'] as List?) ?? [];
-        _overdueJobs = (stats['overdue_jobs'] as List?) ?? [];
-        _isLoading = false;
+        _overdueJobs     = (stats['overdue_jobs']     as List?) ?? [];
+        _isLoading       = false;
       });
     }
   }
@@ -35,127 +38,70 @@ class _LiveAlertsState extends State<LiveAlerts> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceLight.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Live Alerts",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+    return _CommandCard(
+      title: 'Live Alerts',
+      icon: Icons.notifications_active_rounded,
+      iconColor: _alertCount > 0 ? AppColors.matteRed : AppColors.matteGreen,
+      trailing: _alertCount > 0
+          ? Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.matteRed.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.matteRed.withOpacity(0.3)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _isLoading ? '...' : '$_alertCount',
-                  style: const TextStyle(
-                    color: AppColors.error,
+              child: Text(
+                '$_alertCount',
+                style: const TextStyle(
+                    color: AppColors.matteRed,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
+                    fontSize: 12),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-          else if (_alertCount == 0)
-            _buildAlertItem(Icons.check_circle_outline, "All Clear", "No alerts at this time.", AppColors.success)
-          else ...[
-            if (_offlineMachines.isNotEmpty)
-              _buildAlertItem(
-                Icons.warning_amber_rounded,
-                "${_offlineMachines.length} Machine${_offlineMachines.length > 1 ? 's' : ''} Offline/Idle",
-                _offlineMachines.map((m) => m['name'] as String).join(', '),
-                AppColors.error,
+            )
+          : null,
+      child: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(
+                    color: AppColors.primary, strokeWidth: 2),
               ),
-            if (_offlineMachines.isNotEmpty && _overdueJobs.isNotEmpty)
-              const SizedBox(height: 12),
-            if (_overdueJobs.isNotEmpty)
-              _buildAlertItem(
-                Icons.schedule,
-                "${_overdueJobs.length} Overdue Job${_overdueJobs.length > 1 ? 's' : ''}",
-                _overdueJobs.map((j) => j['title'] as String).join(', '),
-                AppColors.warning,
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlertItem(
-    IconData icon,
-    String title,
-    String subtitle,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                  ),
+            )
+          : _alertCount == 0
+              ? _AlertRow(
+                  icon: Icons.check_circle_outline_rounded,
+                  title: 'All Clear',
+                  subtitle: 'No active alerts.',
+                  color: AppColors.matteGreen,
+                )
+              : Column(
+                  children: [
+                    ..._offlineMachines.map(
+                      (m) => _AlertRow(
+                        icon: Icons.power_off_rounded,
+                        title: m['name'] as String? ?? 'Machine',
+                        subtitle: 'OFFLINE — requires attention',
+                        color: AppColors.matteRed,
+                      ),
+                    ),
+                    ..._overdueJobs.map(
+                      (j) => _AlertRow(
+                        icon: Icons.schedule_rounded,
+                        title: j['title'] as String? ?? 'Job',
+                        subtitle: 'Deadline exceeded',
+                        color: AppColors.matteAmber,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary.withOpacity(0.9),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RECENT ACTIVITY — Command Center feed style
+// ─────────────────────────────────────────────────────────────────────────────
 class RecentActivity extends StatefulWidget {
   const RecentActivity({super.key});
 
@@ -166,7 +112,7 @@ class RecentActivity extends StatefulWidget {
 class _RecentActivityState extends State<RecentActivity> {
   bool _isLoading = true;
   List<dynamic> _recentTasks = [];
-  List<dynamic> _newJobs = [];
+  List<dynamic> _newJobs     = [];
 
   @override
   void initState() {
@@ -179,113 +125,237 @@ class _RecentActivityState extends State<RecentActivity> {
     if (mounted) {
       setState(() {
         _recentTasks = (stats['recent_tasks'] as List?) ?? [];
-        _newJobs = (stats['new_jobs'] as List?) ?? [];
-        _isLoading = false;
+        _newJobs     = (stats['new_jobs']     as List?) ?? [];
+        _isLoading   = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    return _CommandCard(
+      title: 'Activity Feed',
+      icon: Icons.timeline_rounded,
+      iconColor: AppColors.matteBlue,
+      child: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(
+                    color: AppColors.primary, strokeWidth: 2),
+              ),
+            )
+          : (_recentTasks.isEmpty && _newJobs.isEmpty)
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'No recent activity.',
+                      style: TextStyle(
+                          color: AppColors.textMuted.withOpacity(0.7),
+                          fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                )
+              : Column(
+                  children: [
+                    ..._recentTasks.map((t) {
+                      final jobTitle =
+                          t['jobs']?['title'] as String? ?? 'Job';
+                      final resource =
+                          t['resources']?['name'] as String? ?? 'Resource';
+                      return _FeedRow(
+                        color: AppColors.matteGreen,
+                        title: t['name'] as String? ?? 'Task',
+                        subtitle: '$jobTitle · $resource',
+                        tag: 'COMPLETED',
+                        tagColor: AppColors.matteGreen,
+                        time: _timeAgo(t['completed_at']),
+                      );
+                    }),
+                    ..._newJobs.map((j) => _FeedRow(
+                          color: AppColors.matteBlue,
+                          title: j['title'] as String? ?? 'Job',
+                          subtitle:
+                              'Status: ${j['status'] as String? ?? 'DRAFT'}',
+                          tag: 'NEW JOB',
+                          tagColor: AppColors.matteBlue,
+                          time: _timeAgo(j['created_at']),
+                        )),
+                  ],
+                ),
+    );
+  }
+
+  String _timeAgo(String? iso) {
+    if (iso == null) return '—';
+    try {
+      final diff = DateTime.now().difference(DateTime.parse(iso).toLocal());
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24)  return '${diff.inHours}h ago';
+      return '${diff.inDays}d ago';
+    } catch (_) {
+      return '—';
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED COMPONENT: Command Center card shell
+// ─────────────────────────────────────────────────────────────────────────────
+class _CommandCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+  final Widget? trailing;
+  final Widget child;
+
+  const _CommandCard({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
+    required this.child,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceLight.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            "Recent Activity",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 16),
               ),
-            )
-          else if (_recentTasks.isEmpty && _newJobs.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Center(
-                child: Text(
-                  "No recent activity found.",
-                  style: TextStyle(color: AppColors.textSecondary.withOpacity(0.6), fontStyle: FontStyle.italic),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
               ),
-            )
-          else ...[
-            // Completed tasks
-            ..._recentTasks.map((task) {
-              final jobTitle = task['jobs']?['title'] as String? ?? 'Unknown Job';
-              final resourceName = task['resources']?['name'] as String? ?? 'Unknown Resource';
-              return _buildActivityItem(
-                color: AppColors.success,
-                title: "Task completed: ${task['name'] ?? 'Task'}",
-                subtitle: "$jobTitle — $resourceName",
-                time: _timeAgo(task['completed_at']),
-              );
-            }),
-            // New jobs created
-            ..._newJobs.map((job) {
-              return _buildActivityItem(
-                color: AppColors.info,
-                title: "New job created: ${job['title'] ?? 'Job'}",
-                subtitle: "Status: ${job['status'] ?? 'DRAFT'}",
-                time: _timeAgo(job['created_at']),
-              );
-            }),
-          ],
+              if (trailing != null) ...[
+                const Spacer(),
+                trailing!,
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.border, height: 1),
+          const SizedBox(height: 12),
+          child,
         ],
       ),
     );
   }
+}
 
-  String _timeAgo(String? isoString) {
-    if (isoString == null) return 'Unknown';
-    try {
-      final dt = DateTime.parse(isoString).toLocal();
-      final diff = DateTime.now().difference(dt);
-      if (diff.inMinutes < 60) return "${diff.inMinutes} min ago";
-      if (diff.inHours < 24) return "${diff.inHours}h ago";
-      return "${diff.inDays}d ago";
-    } catch (_) {
-      return 'Unknown';
-    }
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED COMPONENT: Alert row
+// ─────────────────────────────────────────────────────────────────────────────
+class _AlertRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _AlertRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  Widget _buildActivityItem({
-    required Color color,
-    required String title,
-    required String subtitle,
-    required String time,
-  }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED COMPONENT: Activity feed row
+// ─────────────────────────────────────────────────────────────────────────────
+class _FeedRow extends StatelessWidget {
+  final Color color;
+  final String title;
+  final String subtitle;
+  final String tag;
+  final Color tagColor;
+  final String time;
+
+  const _FeedRow({
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.tag,
+    required this.tagColor,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 5),
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          // Timeline dot + line
+          Column(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -293,39 +363,60 @@ class _RecentActivityState extends State<RecentActivity> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
                         title,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: tagColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                            color: tagColor.withOpacity(0.25)),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          color: tagColor,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary.withOpacity(0.8),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        subtitle,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      time,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 11),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -160,69 +160,7 @@ class MachineCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActiveJobSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDF4FF), // Very light pink
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                machine.currentJobTitle ?? "Unknown Job",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                "${machine.progress}%",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Color(0xFFD946EF),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: (machine.progress ?? 0) / 100,
-              backgroundColor: Colors.white,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD946EF)),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                machine.currentJobUser ?? "Unknown User",
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              ),
-              Text(
-                machine.timeLeft ?? "",
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSpacerHeight(double height) {
-    return SizedBox(height: height);
-  }
 
   Widget _buildSpecsGrid() {
     // Show real data: machine type and a note about capabilities

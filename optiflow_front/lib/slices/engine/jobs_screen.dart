@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -34,28 +35,60 @@ class _JobsScreenState extends State<JobsScreen> {
     if (mounted) setState(() { _jobs = jobs; _isLoading = false; });
   }
 
-  Future<void> _optimizeJob(String jobId) async {
+  Future<void> _optimizeJob(String jobId, List tasks) async {
+    // Guard: cannot optimize a job with no tasks
+    if (tasks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add at least one task before optimizing.'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _optimizing[jobId] = true);
     try {
       final resp = await http.post(
         Uri.parse('${ApiService.baseUrl}/optimize/$jobId'),
       );
       if (!mounted) return;
+
       if (resp.statusCode == 200) {
+        // Parse the rich response to show quality + makespan
+        Map<String, dynamic> body = {};
+        try { body = json.decode(resp.body) as Map<String, dynamic>; } catch (_) {}
+        final quality  = body['quality']?.toString() ?? 'optimal';
+        final makespan = body['makespan_minutes'];
+        final skipped  = body['skipped_tasks'] as int? ?? 0;
+
+        String msg = '✅ Schedule ${quality == 'optimal' ? 'optimally' : 'feasibly'} computed';
+        if (makespan != null) msg += ' — makespan: ${makespan} min';
+        if (skipped > 0)      msg += ' ($skipped task(s) skipped)';
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Job optimized! Check the Schedule tab for the Gantt view.'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: quality == 'optimal' ? AppColors.success : AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
         );
-        _fetchJobs(); // Refresh to show updated task statuses
+        _fetchJobs();
       } else {
+        // Show the exact error detail from the backend, not just the status code
+        String detail = 'Optimization failed (${resp.statusCode})';
+        try {
+          final body = json.decode(resp.body) as Map<String, dynamic>;
+          detail = body['detail']?.toString() ?? detail;
+        } catch (_) {}
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Optimization failed: ${resp.statusCode}'),
+            content: Text(detail),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
           ),
         );
       }
@@ -63,7 +96,7 @@ class _JobsScreenState extends State<JobsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Backend offline — start FastAPI to optimize. ($e)'),
+            content: Text('Backend offline — start FastAPI to optimize.'),
             backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
@@ -73,6 +106,7 @@ class _JobsScreenState extends State<JobsScreen> {
       if (mounted) setState(() => _optimizing[jobId] = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -323,44 +357,63 @@ class _JobsScreenState extends State<JobsScreen> {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    // Optimize button
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 8, offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: isOptimizing ? null : () => _optimizeJob(jobId),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    // Optimize button — disabled for COMPLETED jobs
+                    Builder(builder: (ctx) {
+                      final isCompleted = status == 'COMPLETED';
+                      final canOptimize = !isOptimizing && !isCompleted;
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: canOptimize ? AppColors.primaryGradient : null,
+                          color: canOptimize ? null : AppColors.surfaceLight.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: canOptimize ? [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8, offset: const Offset(0, 4),
+                            ),
+                          ] : null,
+                        ),
+                        child: Tooltip(
+                          message: isCompleted
+                              ? 'Job is already completed'
+                              : tasks.isEmpty
+                                  ? 'Add tasks before optimizing'
+                                  : 'Run CP-SAT optimizer',
+                          child: ElevatedButton.icon(
+                            onPressed: canOptimize ? () => _optimizeJob(jobId, tasks) : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            icon: isOptimizing
+                                ? const SizedBox(
+                                    width: 14, height: 14,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    isCompleted ? Icons.check_circle_outline : Icons.auto_fix_high,
+                                    color: canOptimize ? Colors.white : AppColors.textSecondary,
+                                    size: 16,
+                                  ),
+                            label: Text(
+                              isOptimizing ? 'Optimizing…' : isCompleted ? 'Completed' : 'Optimize',
+                              style: TextStyle(
+                                color: canOptimize ? Colors.white : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                         ),
-                        icon: isOptimizing
-                            ? const SizedBox(
-                                width: 14, height: 14,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.auto_fix_high, color: Colors.white, size: 16),
-                        label: Text(
-                          isOptimizing ? 'Optimizing…' : 'Optimize',
-                          style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
+                      );
+                    }),
+
                   ],
                 ),
                 const SizedBox(height: 12),

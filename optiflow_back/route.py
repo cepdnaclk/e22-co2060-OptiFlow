@@ -172,30 +172,44 @@ def delete_capability(id: str):
 @router.post("/optimize/{job_id}")
 def optimize_job(job_id: str):
     """
-    Triggers the Google OR-Tools C++ solver.
-    It reads the DAG, calculates the perfect schedule, and saves it to Supabase.
+    Triggers the Google OR-Tools CP-SAT solver.
+    Reads the DAG, calculates the optimal schedule, and saves it to Supabase.
+    Returns quality: 'optimal' | 'feasible' so the frontend can inform the user.
     """
     try:
-        # Define 'time zero' for the math engine
-        project_start_time = datetime.now()
-        
-        # Execute the heavy math algorithm from optimizer.py
+        project_start_time = datetime.now(timezone.utc)
         result = run_optimization_engine(job_id, project_start_time)
-        
-        # Check the dictionary returned by optimizer.py
+
         if result["status"] == "success":
+            quality = result.get("quality", "optimal")
+            makespan = result.get("makespan_minutes", 0)
+            skipped  = result.get("skipped_tasks", 0)
+
+            message = f"Schedule optimized ({quality})! Makespan: {makespan} min."
+            if skipped:
+                message += f" Note: {skipped} task(s) skipped (no capable resource)."
+
             return {
-                "message": "Schedule Optimized!", 
-                "makespan_minutes": result["makespan_minutes"]
+                "message":          message,
+                "quality":          quality,
+                "makespan_minutes": makespan,
+                "total_cost":       result.get("total_cost", 0),
+                "skipped_tasks":    skipped,
             }
         else:
-            # If the engine returns an error (like a broken DAG), throw a 400 Bad Request
-            raise HTTPException(status_code=400, detail="Could not find a valid schedule. Check constraints.")
-            
+            # Return the engine's descriptive message, not a generic string
+            raise HTTPException(
+                status_code=400,
+                detail=result.get("message", "Optimization failed — check task configuration.")
+            )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        # If the Python code crashes completely, throw a 500 Internal Server Error
         print(f"Engine Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Optimization Engine Failed")
+        raise HTTPException(status_code=500, detail=f"Optimization Engine Failed: {str(e)}")
+
+
 
 
 # =====================================================================
@@ -309,29 +323,4 @@ def update_task_status(task_id: str, body: dict):
         
     # Return success so the Flutter app knows it can update its UI
     return {"message": f"Task updated to {status}", "task": res.data[0]}
-
-@router.post("/optimize/{job_id}")
-def optimize_job(job_id: str, request: OptimizationRequest): 
-    try:
-        project_start_time = datetime.now()
-        
-        # 2. Pass alpha and beta into the engine
-        result = run_optimization_engine(
-            job_id, 
-            project_start_time, 
-            request.alpha, 
-            request.beta
-        )
-        
-        if result["status"] == "success":
-            return {
-                "message": "Schedule Optimized!", 
-                "makespan_minutes": result["makespan_minutes"],
-                "total_cost": result["total_cost"] # Return the cost to the UI!
-            }
-        else:
-            raise HTTPException(status_code=400, detail="Could not find a valid schedule.")
-            
-    except Exception as e:
-        print(f"Engine Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Optimization Engine Failed")
+

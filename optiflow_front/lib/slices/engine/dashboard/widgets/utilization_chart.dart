@@ -1,8 +1,10 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 
-class UtilizationChart extends StatelessWidget {
+/// Command Center machine utilization — replaces the basic pie chart
+/// with an animated neon arc meter and status row indicators.
+class UtilizationChart extends StatefulWidget {
   final int activeMachines;
   final int idleMachines;
   final int offlineMachines;
@@ -15,137 +17,222 @@ class UtilizationChart extends StatelessWidget {
   });
 
   @override
+  State<UtilizationChart> createState() => _UtilizationChartState();
+}
+
+class _UtilizationChartState extends State<UtilizationChart>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        duration: const Duration(milliseconds: 1200), vsync: this);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+    _ctrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final int totalMachines = activeMachines + idleMachines + offlineMachines;
-    final double activePercentage = totalMachines == 0 ? 0 : (activeMachines / totalMachines) * 100;
-    
+    final total = widget.activeMachines + widget.idleMachines + widget.offlineMachines;
+    final activePct = total == 0 ? 0.0 : widget.activeMachines / total;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Machine Utilization",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.matteBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.precision_manufacturing_rounded,
+                    color: AppColors.matteBlue, size: 14),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Machine Utilization',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          // Arc meter
           Expanded(
-            child: Stack(
-              children: [
-                PieChart(
-                  PieChartData(
-                    sectionsSpace: 0,
-                    centerSpaceRadius: 70,
-                    startDegreeOffset: -90,
-                    sections: totalMachines == 0 
-                      ? [
-                          PieChartSectionData(
-                            color: AppColors.textSecondary.withOpacity(0.2),
-                            value: 100,
-                            title: '',
-                            radius: 20,
-                            showTitle: false,
-                          )
-                        ]
-                      : [
-                      if (activeMachines > 0)
-                        PieChartSectionData(
-                          color: const Color(0xFFD946EF), // Pink
-                          value: activeMachines.toDouble(),
-                          title: '',
-                          radius: 20,
-                          showTitle: false,
-                        ),
-                      if (idleMachines > 0)
-                        PieChartSectionData(
-                          color: AppColors.warning,
-                          value: idleMachines.toDouble(),
-                          title: '',
-                          radius: 20,
-                          showTitle: false,
-                        ),
-                      if (offlineMachines > 0)
-                        PieChartSectionData(
-                          color: AppColors.error,
-                          value: offlineMachines.toDouble(),
-                          title: '',
-                          radius: 20,
-                          showTitle: false,
-                        ),
-                    ],
-                  ),
+            child: AnimatedBuilder(
+              animation: _anim,
+              builder: (_, __) => CustomPaint(
+                painter: _ArcMeterPainter(
+                  activePct: activePct * _anim.value,
+                  idlePct: total == 0
+                      ? 0
+                      : (widget.idleMachines / total) * _anim.value,
+                  offlinePct: total == 0
+                      ? 0
+                      : (widget.offlineMachines / total) * _anim.value,
+                  textPct: activePct,
+                  total: total,
                 ),
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "${activePercentage.toStringAsFixed(0)}%",
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const Text(
-                        "Active",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                child: const SizedBox.expand(),
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          _buildLegendItem("Active Machines", "$activeMachines of $totalMachines", AppColors.textPrimary),
+          const SizedBox(height: 16),
+          _buildRow(AppColors.matteGreen,  'Active',  '${widget.activeMachines}/$total'),
           const SizedBox(height: 8),
-          _buildLegendItem("Idle", "$idleMachines", AppColors.warning),
+          _buildRow(AppColors.matteAmber, 'Idle',    '${widget.idleMachines}'),
           const SizedBox(height: 8),
-          _buildLegendItem("Offline", "$offlineMachines", AppColors.error),
+          _buildRow(AppColors.matteRed,   'Offline', '${widget.offlineMachines}'),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(String label, String value, Color valueColor) {
+  Widget _buildRow(Color color, String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 6)],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(label,
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 12)),
+          ],
         ),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
+        Text(value,
+            style: TextStyle(
+                color: color, fontWeight: FontWeight.w700, fontSize: 13)),
       ],
     );
   }
+}
+
+class _ArcMeterPainter extends CustomPainter {
+  final double activePct;
+  final double idlePct;
+  final double offlinePct;
+  final double textPct;
+  final int total;
+
+  _ArcMeterPainter({
+    required this.activePct,
+    required this.idlePct,
+    required this.offlinePct,
+    required this.textPct,
+    required this.total,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height * 0.58;
+    final r  = math.min(cx, cy) * 0.82;
+    const startAngle = math.pi;
+    const sweepTotal = math.pi; // Half circle
+
+    final trackPaint = Paint()
+      ..color = AppColors.surfaceLight
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 18
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      startAngle,
+      sweepTotal,
+      false,
+      trackPaint,
+    );
+
+    // Active (green)
+    _drawArc(canvas, cx, cy, r, startAngle, sweepTotal * activePct,
+        AppColors.matteGreen);
+    // Idle (amber)
+    _drawArc(canvas, cx, cy, r, startAngle + sweepTotal * activePct,
+        sweepTotal * idlePct, AppColors.matteAmber);
+    // Offline (red)
+    _drawArc(
+        canvas,
+        cx,
+        cy,
+        r,
+        startAngle + sweepTotal * activePct + sweepTotal * idlePct,
+        sweepTotal * offlinePct,
+        AppColors.matteRed);
+
+    // Centre text
+    final pct = (textPct * 100).toStringAsFixed(0);
+    _drawCentreText(canvas, Offset(cx, cy - 6), '$pct%',
+        const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 30,
+          fontWeight: FontWeight.w800,
+        ));
+    _drawCentreText(canvas, Offset(cx, cy + 22), 'uptime',
+        const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ));
+  }
+
+  void _drawArc(Canvas canvas, double cx, double cy, double r,
+      double start, double sweep, Color color) {
+    if (sweep <= 0) return;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 18
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    
+    canvas.drawArc(
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        start, sweep, false, paint);
+  }
+
+  void _drawCentreText(
+      Canvas canvas, Offset offset, String text, TextStyle style) {
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, offset - Offset(tp.width / 2, tp.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(_ArcMeterPainter old) =>
+      old.activePct != activePct ||
+      old.idlePct != idlePct ||
+      old.offlinePct != offlinePct;
 }
