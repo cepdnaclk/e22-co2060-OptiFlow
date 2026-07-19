@@ -303,24 +303,51 @@ def get_tasks(resource_id: Optional[str] = None):
 @router.patch("/tasks/{task_id}/status")
 def update_task_status(task_id: str, body: dict):
     """
-    Called by the Flutter mobile app when a worker taps "Start" or "Complete".
-    Using a PATCH request because we are only updating ONE specific field (status), 
-    not the entire row.
+    Updates a task's status.
+
+    When a task becomes COMPLETED, the current UTC date and time
+    are saved in the completed_at column.
     """
-    # Extract the new status from the incoming JSON payload
+
     status = body.get("status")
-    valid_statuses = ["SCHEDULED", "IN_PROGRESS", "COMPLETED"]
-    
-    # Safety Check: Don't let the Flutter app send a made-up status like "DONE"
+
+    valid_statuses = [
+        "SCHEDULED",
+        "IN_PROGRESS",
+        "COMPLETED",
+    ]
+
     if status not in valid_statuses:
-        raise HTTPException(status_code=400, detail="Invalid status")
-        
-    # Ask Supabase to update just the status column for this specific task
-    res = supabase.table("tasks").update({"status": status}).eq("id", task_id).execute()
-    
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid status",
+        )
+
+    update_data = {
+        "status": status,
+    }
+
+    if status == "COMPLETED":
+        update_data["completed_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+
+    res = (
+        supabase
+        .table("tasks")
+        .update(update_data)
+        .eq("id", task_id)
+        .execute()
+    )
+
     if not res.data:
-        raise HTTPException(status_code=404, detail="Task not found")
-        
-    # Return success so the Flutter app knows it can update its UI
-    return {"message": f"Task updated to {status}", "task": res.data[0]}
-
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found",
+        )
+
+    return {
+        "message": f"Task updated to {status}",
+        "task": res.data[0],
+    }
+
