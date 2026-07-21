@@ -1,4 +1,5 @@
 import os
+import math
 from datetime import datetime, timedelta
 from ortools.sat.python import cp_model
 from databse import supabase
@@ -14,6 +15,9 @@ def fetch_optiflow_data(job_id: str):
 
     FIX 3: Capabilities are now filtered to only the operation_type_ids
     that this specific job's tasks actually need, avoiding a full-table scan.
+
+    Extended: Also fetches task_allowed_resources and resource types
+    for break and resource-restriction support.
     """
     # 1. Get every step required to complete this specific order
     tasks = supabase.table("tasks").select("*").eq("job_id", job_id).execute().data
@@ -25,7 +29,7 @@ def fetch_optiflow_data(job_id: str):
     ))
 
     if not needed_op_type_ids:
-        return tasks, [], []
+        return tasks, [], [], {}, {}
 
     # 3. Get the DAG (Directed Acyclic Graph) rules
     task_ids = [t['id'] for t in tasks]
@@ -37,16 +41,54 @@ def fetch_optiflow_data(job_id: str):
         .data
     )
 
-    # FIX 3: Filtered capabilities — only fetch what this job needs
+    # FIX 3: Filtered capabilities — only fetch what this job needs.
+    # Embed resource metadata (type, status) via a Supabase nested join so we
+    # never read non-existent type/status fields directly off a capability row.
     capabilities = (
         supabase.table("resource_capabilities")
-        .select("*")
+        .select("*, resources(id, name, type, status)")
         .in_("operation_type_id", needed_op_type_ids)
         .execute()
         .data
     )
 
-    return tasks, dependencies, capabilities
+    # 4. Fetch allowed resources for each task (from normalized join table)
+    allowed_resources_map = {}  # {task_id: [resource_id, ...]}
+    if task_ids:
+        try:
+            allowed_rows = (
+                supabase.table("task_allowed_resources")
+                .select("task_id, resource_id")
+                .in_("task_id", task_ids)
+                .execute()
+                .data
+            )
+            for row in (allowed_rows or []):
+                tid = row["task_id"]
+                rid = row["resource_id"]
+                if tid not in allowed_resources_map:
+                    allowed_resources_map[tid] = []
+                allowed_resources_map[tid].append(rid)
+        except Exception as e:
+            # Table may not exist yet in old deployments — graceful fallback
+            print(f"[Optimizer] Warning: could not fetch task_allowed_resources: {e}")
+
+    # 5. Build resource metadata lookup from the embedded nested join data.
+    # Structure: {resource_id: {"type": "MACHINE"|"HUMAN", "status": "ACTIVE"|...}}
+    # Replaces the old separate supabase.table("resources") round-trip, which
+    # could store None for type if the column value was NULL, causing the
+    # break-type filter comparison (None == 'MACHINE') to silently fail.
+    resource_types_map = {}
+    for cap in (capabilities or []):
+        res = cap.get("resources")
+        rid = cap.get("resource_id")
+        if rid and res and isinstance(res, dict):
+            resource_types_map[rid] = {
+                "type":   str(res.get("type")   or "MACHINE").upper(),
+                "status": str(res.get("status") or "ACTIVE").upper(),
+            }
+
+    return tasks, dependencies, capabilities, allowed_resources_map, resource_types_map
 
 
 def fetch_already_scheduled_intervals(job_id: str):
@@ -85,14 +127,28 @@ def fetch_already_scheduled_intervals(job_id: str):
         try:
             start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
             end_dt   = datetime.fromisoformat(end_str.replace("Z", "+00:00"))
-            # Convert to minutes relative to now (project_start_time proxy)
-            start_min = max(0, int((start_dt.replace(tzinfo=None) - now).total_seconds() / 60))
-            end_min   = max(start_min + 1, int((end_dt.replace(tzinfo=None) - now).total_seconds() / 60))
+            start_min = max(0, int(math.floor((start_dt.replace(tzinfo=None) - now).total_seconds() / 60.0)))
+            end_min   = max(start_min + 1, int(math.ceil((end_dt.replace(tzinfo=None) - now).total_seconds() / 60.0)))
             if r_id not in blocked:
                 blocked[r_id] = []
             blocked[r_id].append((start_min, end_min))
         except Exception:
             continue
+
+    # Merge overlapping intervals for each resource to prevent AddNoOverlap from throwing INFEASIBLE
+    for r_id in blocked:
+        blocked[r_id].sort(key=lambda x: x[0])
+        merged = []
+        for current in blocked[r_id]:
+            if not merged:
+                merged.append(current)
+            else:
+                last = merged[-1]
+                if current[0] < last[1]: # Overlap
+                    merged[-1] = (last[0], max(last[1], current[1]))
+                else:
+                    merged.append(current)
+        blocked[r_id] = merged
 
     return blocked
 
@@ -108,7 +164,27 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
     beta:  The weight given to minimizing operational expenses (Cost).
     """
     # Bring the database information into the engine's memory
-    tasks, dependencies, capabilities = fetch_optiflow_data(job_id)
+    tasks, dependencies, capabilities, allowed_resources_map, resource_types_map = fetch_optiflow_data(job_id)
+
+    # ------------------------------------------------------------------
+    # Helper: resolve resource metadata from a capability row.
+    # Prefers the nested 'resources' JOIN object embedded in each cap row;
+    # falls back to the pre-built resource_types_map dict.
+    # Always returns strings normalised to UPPERCASE.
+    # ------------------------------------------------------------------
+    def _res_meta(cap: dict) -> dict:
+        """Returns {'type': ..., 'status': ...} for a capability (both UPPERCASE str)."""
+        nested = cap.get("resources")
+        if nested and isinstance(nested, dict):
+            return {
+                "type":   str(nested.get("type")   or "MACHINE").upper(),
+                "status": str(nested.get("status") or "ACTIVE").upper(),
+            }
+        # Fallback: use the pre-built map (which itself was built from nested data)
+        return resource_types_map.get(
+            cap.get("resource_id", ""),
+            {"type": "MACHINE", "status": "ACTIVE"},
+        )
 
     # FIX 5 / FIX 6: Early-exit guards before touching the model
     if not tasks:
@@ -127,20 +203,33 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
     # Instantiate the blank canvas
     model = cp_model.CpModel()
 
-    # FIX 1: Dynamic horizon — sum of the worst-case duration for each task
-    # (slowest capable machine + longest setup). Much tighter than 100,000.
+    # -----------------------------------------------------------------
+    # DYNAMIC HORIZON — sum of worst-case duration + break for each task
+    # -----------------------------------------------------------------
     horizon = 0
     for task in schedulable_tasks:
         op_type = task['operation_type_id']
         qty     = max(task.get('quantity_to_process', 1) or 1, 1)
+        manual_time = task.get('processing_time_minutes') or 0
+        break_mins  = task.get('break_after_minutes', 0) or 0
         capable = [c for c in capabilities if c['operation_type_id'] == op_type]
         if capable:
-            worst_duration = max(
-                int((qty / max(c.get('processing_rate_per_hr', 1), 0.001)) * 60
-                    + c.get('setup_time_minutes', 0))
-                for c in capable
-            )
+            if manual_time > 0:
+                # Manual duration + worst-case setup + break
+                worst_duration = manual_time + max(
+                    c.get('setup_time_minutes', 0) for c in capable
+                ) + break_mins
+            else:
+                # Quantity-based worst case + break
+                worst_duration = max(
+                    int((qty / max(c.get('processing_rate_per_hr', 1), 0.001)) * 60
+                        + c.get('setup_time_minutes', 0))
+                    for c in capable
+                ) + break_mins
             horizon += worst_duration
+    # Also account for dependency wait times
+    for dep in dependencies:
+        horizon += dep.get('mandatory_wait_minutes', 0) or 0
     horizon = max(horizon, 1440)  # minimum 24 hours
 
     # --- TRACKING DICTIONARIES ---
@@ -171,22 +260,76 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
     # STEP 3: CREATING THE QUANTUM TIMELINE
     # -----------------------------------------------------------------
     for task in schedulable_tasks:
-        t_id    = task['id']
-        op_type = task['operation_type_id']
-        qty     = max(task.get('quantity_to_process', 1) or 1, 1)
+        t_id       = task['id']
+        t_name     = task.get('name', str(t_id))
+        op_type    = task['operation_type_id']
+        qty        = max(task.get('quantity_to_process', 1) or 1, 1)
+        manual_time = task.get('processing_time_minutes') or 0
+        break_mins  = task.get('break_after_minutes', 0) or 0
+        break_type  = task.get('break_type', 'NONE') or 'NONE'
 
         task_start = model.NewIntVar(0, horizon, f'start_{t_id}')
         task_end   = model.NewIntVar(0, horizon, f'end_{t_id}')
         task_vars[t_id] = {'start': task_start, 'end': task_end}
 
+        # --- STEP 3a: Base candidates — operation type match ---
         capable_resources = [c for c in capabilities if c['operation_type_id'] == op_type]
 
-        # FIX 5: If no resource can handle this task, skip it gracefully
-        # instead of crashing with AddExactlyOne([])
+        # --- STEP 3b: Filter out non-ACTIVE resources ---
+        # Uses the nested 'resources' join data embedded in each capability row
+        # so we never compare against a raw capability field that doesn't exist.
+        capable_resources = [
+            c for c in capable_resources
+            if _res_meta(c).get("status", "ACTIVE") == "ACTIVE"
+        ]
+
+        # --- STEP 3c: allowed_resource_ids restriction ---
+        # An EMPTY list means "no restriction — allow every capable active resource".
+        # Only filter when the task explicitly names specific resources.
+        task_allowed = allowed_resources_map.get(t_id, [])
+        if task_allowed:
+            capable_resources = [
+                c for c in capable_resources
+                if c['resource_id'] in task_allowed
+            ]
+
+        # --- STEP 3d: break_type resource-type filter ---
+        # MACHINE break requires a MACHINE resource; HUMAN break requires HUMAN.
+        # NONE does not restrict by resource type.
+        if break_type == "MACHINE":
+            capable_resources = [
+                c for c in capable_resources
+                if _res_meta(c).get("type", "MACHINE") == "MACHINE"
+            ]
+        elif break_type == "HUMAN":
+            capable_resources = [
+                c for c in capable_resources
+                if _res_meta(c).get("type", "MACHINE") == "HUMAN"
+            ]
+        # break_type == "NONE": no type filter applied
+
+        # --- Diagnostics: log candidate resolution for every task ---
+        print(
+            f"[Optimizer] Task {t_id!r} ({t_name!r}): "
+            f"operation={op_type}, "
+            f"break_type={break_type}, "
+            f"allowed_resources={task_allowed}, "
+            f"candidate_resources={[c['resource_id'] for c in capable_resources]}"
+        )
+
+        # Early return with a clear error if no candidate resources remain.
+        # Do NOT build CP-SAT variables with zero candidates.
         if not capable_resources:
-            skipped_tasks.append(t_id)
-            del task_vars[t_id]
-            continue
+            return {
+                "status":        "error",
+                "solver_status": "NO_CANDIDATE_RESOURCE",
+                "message": (
+                    f'Task "{t_name}" has no valid active resource. '
+                    f'Operation type: {op_type}; '
+                    f'break type: {break_type}; '
+                    f'allowed resources: {task_allowed}.'
+                ),
+            }
 
         presence_literals = []
 
@@ -196,8 +339,15 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
             if r_id not in machine_intervals:
                 machine_intervals[r_id] = []
 
-            rate     = max(cap.get('processing_rate_per_hr', 1), 0.001)
-            duration = max(int((qty / rate) * 60 + cap.get('setup_time_minutes', 0)), 1)
+            # --- DURATION LOGIC ---
+            # If processing_time_minutes is provided and > 0, use it + setup_time
+            # Otherwise fall back to quantity/rate + setup_time
+            setup = cap.get('setup_time_minutes', 0) or 0
+            if manual_time > 0:
+                duration = max(manual_time + setup, 1)
+            else:
+                rate = max(cap.get('processing_rate_per_hr', 1), 0.001)
+                duration = max(int((qty / rate) * 60 + setup), 1)
 
             # Integer cost: duration_in_hours * cost_per_hour
             task_cost = int((duration / 60.0) * float(cap.get('cost_per_hour', 0)))
@@ -212,6 +362,7 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
             local_start = model.NewIntVar(0, horizon, f'local_start_{t_id}_{r_id}')
             local_end   = model.NewIntVar(0, horizon, f'local_end_{t_id}_{r_id}')
 
+            # Task execution interval
             interval = model.NewOptionalIntervalVar(
                 local_start, duration, local_end, is_present,
                 f'int_{t_id}_{r_id}'
@@ -221,6 +372,26 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
             model.Add(task_end   == local_end).OnlyEnforceIf(is_present)
 
             machine_intervals[r_id].append(interval)
+
+            # --- BREAK INTERVAL ---
+            # If break_after_minutes > 0, create an optional break interval
+            # on the SAME resource, starting exactly at task execution end.
+            # Uses the same presence Boolean so it's active only when
+            # this resource is chosen for the task.
+            if break_mins > 0:
+                break_start = model.NewIntVar(0, horizon, f'break_start_{t_id}_{r_id}')
+                break_end   = model.NewIntVar(0, horizon, f'break_end_{t_id}_{r_id}')
+
+                break_interval = model.NewOptionalIntervalVar(
+                    break_start, break_mins, break_end, is_present,
+                    f'break_int_{t_id}_{r_id}'
+                )
+
+                # Break starts exactly when the task execution ends
+                model.Add(break_start == local_end).OnlyEnforceIf(is_present)
+
+                # Add break to the same resource's NoOverlap list
+                machine_intervals[r_id].append(break_interval)
 
         # RULE: Exactly one resource handles this task
         model.AddExactlyOne(presence_literals)
@@ -238,6 +409,8 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
     # -----------------------------------------------------------------
     # STEP 4: ENFORCING CHRONOLOGY (The DAG)
     # -----------------------------------------------------------------
+    # Note: Dependencies use task execution end, NOT break end.
+    # The break blocks the RESOURCE, not the successor task.
     for dep in dependencies:
         pred_id = dep['predecessor_task_id']
         succ_id = dep['successor_task_id']
@@ -271,6 +444,17 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
     # STEP 7: UNLEASH THE ENGINE
     # FIX 4: 60-second wall-clock limit so the API never hangs indefinitely
     # -----------------------------------------------------------------
+
+    # Validate model structure before handing it to the solver.
+    # Catches zero-duration intervals, bad variable bounds, etc.
+    validation_error = model.Validate()
+    if validation_error:
+        return {
+            "status":        "error",
+            "solver_status": "MODEL_INVALID",
+            "message":       f"Optimizer model validation failed: {validation_error}",
+        }
+
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 60.0
     status = solver.Solve(model)
@@ -286,7 +470,7 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
         # FIX 4: Tell the caller whether this is a proven optimal result or
         # the best found within the 60-second time budget
         quality = "optimal" if status == cp_model.OPTIMAL else "feasible"
-        print(f"✅ Schedule Found ({quality})! Makespan: {final_makespan} mins | Cost: ${final_cost}")
+        print(f"[Optimizer] Schedule found ({quality}). Makespan: {final_makespan} mins | Cost: ${final_cost}")
 
         for task in schedulable_tasks:
             t_id = task['id']
@@ -307,6 +491,7 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
                     break
 
             # Commit schedule to Supabase
+            # scheduled_end_time = task execution end (NOT break end)
             supabase.table("tasks").update({
                 "scheduled_start_time": actual_start.isoformat(),
                 "scheduled_end_time":   actual_end.isoformat(),
@@ -326,13 +511,34 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
         }
 
     else:
-        print("❌ No feasible schedule found.")
-        return {
-            "status":  "error",
-            "message": (
-                "The solver could not find a valid schedule within the time limit. "
-                "Check that all tasks have capable resources and that dependencies form no cycles."
-            ),
-        }
+        status_name = solver.StatusName(status)
+        print(f"[Optimizer] No feasible schedule found. Solver status: {status_name}")
 
-
+        if status_name == "INFEASIBLE":
+            msg = (
+                "The solver determined no valid schedule exists (INFEASIBLE). "
+                "Check that task dependencies do not form a cycle and that every task "
+                "has at least one capable, active resource."
+            )
+        elif status_name == "MODEL_INVALID":
+            msg = (
+                "The constraint model is invalid (MODEL_INVALID). "
+                "This usually means a task duration or horizon value is 0 or negative. "
+                "Verify all processing rates and quantities are positive."
+            )
+        elif status_name == "UNKNOWN":
+            msg = (
+                "The solver could not find a solution within the 60-second time limit (UNKNOWN). "
+                "Try simplifying the job (fewer tasks / resources) or increase task processing rates."
+            )
+        else:
+            msg = (
+                f"Optimization failed with solver status: {status_name}. "
+                "Check that all tasks have capable resources and that dependencies form no cycles."
+            )
+
+        return {
+            "status":        "error",
+            "solver_status": status_name,
+            "message":       msg,
+        }
