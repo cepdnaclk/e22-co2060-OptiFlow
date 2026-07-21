@@ -22,9 +22,17 @@
             "eNumber": "E/22/385"
         }
     ],
+    "supervisors": [
+        {
+            "name": "Dr. Supervisor Name",
+            "email": "supervisor@eng.pdn.ac.lk"
+        }
+    ],
     "tags": [
-        "Web",
-        "Embedded Systems"
+        "Operations Research",
+        "Scheduling",
+        "Flutter",
+        "Python"
     ],
     "image": "coverpage.png",
     "thumbnail": "coverpage.png"
