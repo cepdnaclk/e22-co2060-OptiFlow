@@ -24,8 +24,8 @@
     ],
     "supervisors": [
         {
-            "name": "Dr. Supervisor Name",
-            "email": "supervisor@eng.pdn.ac.lk"
+            "name": "",
+            "email": ""
         }
     ],
     "tags": [
