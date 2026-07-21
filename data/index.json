@@ -1,33 +1,31 @@
 {
-    "title": "This is the title of the project",
+    "title": "OptiFlow: Enterprise Print Shop Scheduler",
     "team": [
-    {
-        "name": "Team Member Name 1",
-        "email": "email@eng.pdn.ac.lk",
-        "eNumber": "E/yy/xxx"
-    },
-    {
-        "name": "Team Member Name 2",
-        "email": "email@eng.pdn.ac.lk",
-        "eNumber": "E/yy/xxx"
-    },
-    {
-        "name": "Team Member Name 3",
-        "email": "email@eng.pdn.ac.lk",
-        "eNumber": "E/yy/xxx"
-    }
+        {
+            "name": "M.S. Rashad",
+            "email": "e22320@eng.pdn.ac.lk",
+            "eNumber": "E/22/320"
+        },
+        {
+            "name": "K. Sadurshika",
+            "email": "e22337@eng.pdn.ac.lk",
+            "eNumber": "E/22/337"
+        },
+        {
+            "name": "S. Vikashan",
+            "email": "e22409@eng.pdn.ac.lk",
+            "eNumber": "E/22/409"
+        },
+        {
+            "name": "S. Sulakshan",
+            "email": "e22385@eng.pdn.ac.lk",
+            "eNumber": "E/22/385"
+        }
     ],
-    "supervisors": [
-    {
-        "name": "Dr. Supervisor 1",
-        "email": "email@eng.pdn.ac.lk"
-    },
-    {
-        "name": "Supervisor 2",
-        "email": "email@eng.pdn.ac.lk"
-    }
+    "tags": [
+        "Web",
+        "Embedded Systems"
     ],
-    "tags": ["Web", "Embedded Systems"],
-    "image":"cover_page.jpg",
-    "thumbnail":"thumbnail.jpg"
+    "image": "coverpage.png",
+    "thumbnail": "coverpage.png"
 }
