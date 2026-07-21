@@ -32,6 +32,25 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> optimizeAll({List<String>? jobIds}) async {
+    try {
+      final body = jobIds != null ? json.encode({"job_ids": jobIds}) : json.encode({});
+      final response = await http.post(
+        Uri.parse("$baseUrl/optimize-all"),
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception("Failed to optimize jobs");
+      }
+    } catch (e) {
+      print("Error optimizing all jobs: $e");
+      return {"status": "error"};
+    }
+  }
+
   // ==========================================
   // ORDER SLICE
   // ==========================================
@@ -137,33 +156,62 @@ class ApiService {
         final List<Booking> bookings = [];
 
         for (final item in data) {
-          // Skip tasks that have not been assigned to a resource yet
-          // (unoptimized tasks) — they would render as empty Gantt blocks.
+          // Skip tasks that have not been assigned to a resource yet.
           final resourceId = item['assigned_resource_id']?.toString();
           if (resourceId == null || resourceId.isEmpty) continue;
 
           final startTime = item['scheduled_start_time'] != null
               ? DateTime.parse(item['scheduled_start_time']).toLocal()
               : DateTime.now();
-          final endTime = item['scheduled_end_time'] != null
+
+          // scheduled_end_time = processing end only (break excluded)
+          final processingEnd = item['scheduled_end_time'] != null
               ? DateTime.parse(item['scheduled_end_time']).toLocal()
               : startTime.add(const Duration(hours: 1));
 
-          // Use minutes for better resolution; Gantt renders in hours but
-          // ensure at least 1 hour block so tiny tasks are still visible.
-          final durationMinutes = endTime.difference(startTime).inMinutes;
-          final durationHours   = (durationMinutes / 60).ceil().clamp(1, 24);
+          // scheduled_rest_end_time = resource available again after break
+          final restEnd = item['scheduled_rest_end_time'] != null
+              ? DateTime.parse(item['scheduled_rest_end_time']).toLocal()
+              : null;
+
+          final processingMinutes =
+              processingEnd.difference(startTime).inMinutes;
+          final durationHours =
+              (processingMinutes / 60).ceil().clamp(1, 24);
+
+          // Task-level break fields – safe defaults for old rows.
+          final breakEnabled = item['break_enabled'] as bool? ?? false;
+          final breakType = item['break_type'] as String?;
+          final breakDurationMinutes =
+              (item['break_duration_minutes'] as num?)?.toInt() ?? 0;
+
+          final jobPriority =
+              item['jobs']?['priority']?.toString() ?? 'MEDIUM';
 
           bookings.add(Booking(
-            id:           item['id']?.toString() ?? '',
-            machineId:    resourceId,
-            machineName:  item['resources']?['name']?.toString() ?? 'Unknown Resource',
-            jobTitle:     item['jobs']?['title']?.toString() ?? item['name']?.toString() ?? 'Unknown Job',
-            userName:     'System',
-            startTime:    startTime,
-            durationHours: durationHours,
-            priority:     'Medium',
-            status:       item['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
+            id:                   item['id']?.toString() ?? '',
+            machineId:            resourceId,
+            machineName:          item['resources']?['name']?.toString() ??
+                                  'Unknown Resource',
+            jobTitle:             item['jobs']?['title']?.toString() ??
+                                  item['name']?.toString() ?? 'Unknown Job',
+            jobPriority:          jobPriority,
+            taskName:             item['name']?.toString() ?? '',
+            quantity:             (item['quantity_to_process'] as num?)
+                                      ?.toInt() ?? 0,
+            userName:             'System',
+            startTime:            startTime,
+            processingEndTime:    processingEnd,
+            restEndTime:          restEnd,
+            durationHours:        durationHours,
+            processingMinutes:    processingMinutes,
+            breakEnabled:         breakEnabled,
+            breakType:            breakType,
+            breakDurationMinutes: breakDurationMinutes,
+            priority:             jobPriority,
+            status:               item['status'] == 'CONFLICT'
+                                      ? 'CONFLICT' : 'CONFIRMED',
+            taskStatus:           item['status']?.toString() ?? 'SCHEDULED',
           ));
         }
         return bookings;

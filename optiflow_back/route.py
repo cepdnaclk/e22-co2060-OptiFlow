@@ -11,7 +11,7 @@ from databse import supabase
 
 # Import all the Pydantic data models (validation rules) Sulakshan built
 from models import * # Import Rashad's optimization engine
-from optimizer import run_optimization_engine 
+from optimizer import run_optimization_engine, run_optimization_engine_multi
 
 # Create the router object. This is like a mini-FastAPI app that we can 
 # plug into the main.py file later.
@@ -133,6 +133,28 @@ def get_capabilities_by_resource(resource_id: str):
     res = supabase.table("resource_capabilities").select("*, operation_types(*)").eq("resource_id", resource_id).execute()
     return res.data
 
+
+@router.get("/capabilities/operation/{operation_type_id}")
+def get_capabilities_by_operation(operation_type_id: str):
+    """Returns all resources (with their capability data) capable of a given operation.
+
+    The frontend uses this to populate the \"Resource Restriction\" dropdown
+    after an operation type is selected — only capable resources are shown.
+    Offline resources are excluded.
+    """
+    caps = (
+        supabase.table("resource_capabilities")
+        .select("*, resources(id, name, status, type)")
+        .eq("operation_type_id", operation_type_id)
+        .execute()
+    )
+    # Filter out offline resources
+    active_caps = [
+        c for c in (caps.data or [])
+        if c.get("resources") and c["resources"].get("status") != "OFFLINE"
+    ]
+    return active_caps
+
 @router.post("/capabilities")
 def create_capability(body: CapabilityCreate):
     """Assigns a new skill/capability to a resource."""
@@ -208,6 +230,19 @@ def optimize_job(job_id: str):
     except Exception as e:
         print(f"Engine Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Optimization Engine Failed: {str(e)}")
+
+@router.post("/optimize-multi")
+def optimize_multi_schedule(body: MultiJobInput):
+    """
+    Triggers the optimization engine for MULTIPLE jobs.
+    """
+    now = datetime.now(timezone.utc)
+    result = run_optimization_engine_multi(body.job_ids, now)
+
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result.get("message", "Unknown error"))
+
+    return result
 
 
 
@@ -285,9 +320,26 @@ def get_analytics_jobs(days: int = Query(30, ge=1, le=365)):
 
 @router.get("/schedule")
 def get_schedule():
-    """Fetches all scheduled tasks to display on the global schedule/calendar."""
-    # Fetch tasks that have moved past PENDING
-    res = supabase.table("tasks").select("*, jobs(title), resources(name)").neq("status", "PENDING").execute()
+    """Fetches all scheduled tasks to display on the global schedule/calendar.
+
+    Includes task-level break fields and job priority so the frontend can
+    render the full detail popup without an additional API call.
+    """
+    res = (
+        supabase.table("tasks")
+        .select(
+            "id, name, status, quantity_to_process, "
+            "assigned_resource_id, "
+            "scheduled_start_time, scheduled_end_time, scheduled_rest_end_time, "
+            "processing_time_minutes, "
+            "restricted_resource_id, "
+            "break_enabled, break_type, break_duration_minutes, "
+            "jobs(title, priority), "
+            "resources(name)"
+        )
+        .neq("status", "PENDING")
+        .execute()
+    )
     return res.data
 
 @router.get("/tasks")
@@ -327,10 +379,14 @@ def update_task_status(task_id: str, body: dict):
         "status": status,
     }
 
-    if status == "COMPLETED":
-        update_data["completed_at"] = datetime.now(
-            timezone.utc
-        ).isoformat()
+    current = supabase.table("tasks").select("status", "completed_at").eq("id", task_id).execute().data
+    if current:
+        old_status = current[0]["status"]
+        if old_status == "PENDING" and status == "IN_PROGRESS":
+            raise HTTPException(status_code=400, detail="Invalid transition")
+
+        if status == "COMPLETED" and not current[0].get("completed_at"):
+            update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
 
     res = (
         supabase

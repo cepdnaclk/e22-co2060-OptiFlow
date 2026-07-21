@@ -9,14 +9,24 @@ class TaskItem {
   final String id;
   TextEditingController nameController;
   TextEditingController quantityController;
+  TextEditingController hoursController;
+  TextEditingController minutesController;
+  TextEditingController breakDurationController;
   String? operationType;
+  String? restrictedResourceId; // null = No Resource Restriction
+  bool breakEnabled;
   List<String> dependsOn;
 
   TaskItem({
     required this.id,
     required this.nameController,
     required this.quantityController,
+    required this.hoursController,
+    required this.minutesController,
+    required this.breakDurationController,
     this.operationType,
+    this.restrictedResourceId,
+    this.breakEnabled = false,
     required this.dependsOn,
   });
 }
@@ -43,10 +53,75 @@ class _NewJobOrderState extends State<NewJobOrder> {
   bool _isLoadingOps = true;
   bool _isSubmitting = false;
 
+  List<Map<String, dynamic>> _resources = [];
+  bool _isLoadingResources = true;
+
+  /// Cache: op_type_id → list of capable, non-offline resources.
+  /// Key '' = all non-offline resources (fallback when no op type selected).
+  final Map<String, List<Map<String, dynamic>>> _resourceCache = {};
+
   @override
   void initState() {
     super.initState();
     _fetchOperationTypes();
+    _fetchResources(); // load all resources for the initial fallback
+  }
+
+  /// Fetches all non-offline resources (used as fallback when no op type is set).
+  Future<void> _fetchResources() async {
+    try {
+      final response =
+          await http.get(Uri.parse('${ApiService.baseUrl}/resources'));
+      if (response.statusCode == 200 && mounted) {
+        final raw = jsonDecode(response.body);
+        final List<dynamic> list =
+            raw is List ? raw : (raw['resources'] ?? []);
+        final all = list
+            .where((r) => r['status'] != 'OFFLINE')
+            .map((r) => r as Map<String, dynamic>)
+            .toList();
+        _resourceCache[''] = all;
+        setState(() {
+          _resources = all;
+          _isLoadingResources = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() { _isLoadingResources = false; });
+    }
+  }
+
+  /// Fetches resources capable of [operationTypeId] from the backend.
+  /// Results are cached so re-selecting the same op type avoids a round-trip.
+  ///
+  /// NOTE: If the backend capability endpoint is unavailable (e.g. before the
+  /// migration runs), this silently falls back to the full resource list.
+  /// The backend CP-SAT optimizer remains the final authority on whether a
+  /// resource is truly capable.
+  Future<List<Map<String, dynamic>>> _fetchResourcesForOperation(
+      String operationTypeId) async {
+    if (_resourceCache.containsKey(operationTypeId)) {
+      return _resourceCache[operationTypeId]!;
+    }
+    try {
+      final response = await http.get(Uri.parse(
+          '${ApiService.baseUrl}/capabilities/operation/$operationTypeId'));
+      if (response.statusCode == 200) {
+        final List<dynamic> caps = jsonDecode(response.body);
+        // Each cap has a `resources` sub-object with {id, name, status}
+        final result = caps
+            .where((c) => c['resources'] != null)
+            .map<Map<String, dynamic>>((c) {
+          final r = c['resources'] as Map<String, dynamic>;
+          return {'id': r['id'], 'name': r['name'], 'status': r['status']};
+        }).toList();
+        _resourceCache[operationTypeId] = result;
+        return result;
+      }
+    } catch (_) {
+      // Silently fall back to full list
+    }
+    return _resourceCache[''] ?? _resources;
   }
 
   Future<void> _fetchOperationTypes() async {
@@ -66,7 +141,12 @@ class _NewJobOrderState extends State<NewJobOrder> {
           id: 'T${_taskIdCounter++}',
           nameController: TextEditingController(),
           quantityController: TextEditingController(),
+          hoursController: TextEditingController(text: '0'),
+          minutesController: TextEditingController(text: '0'),
+          breakDurationController: TextEditingController(text: '5'),
           operationType: _operationTypes.isNotEmpty ? _operationTypes.first['id'] : null,
+          restrictedResourceId: null,
+          breakEnabled: false,
           dependsOn: [],
         ),
       );
@@ -218,11 +298,69 @@ class _NewJobOrderState extends State<NewJobOrder> {
         setState(() { _isSubmitting = false; });
         return;
       }
+      // Validate hours/minutes
+      final hours = int.tryParse(task.hoursController.text) ?? 0;
+      final mins = int.tryParse(task.minutesController.text) ?? 0;
+      if (hours < 0 || mins < 0 || mins > 59) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}": '
+                  'Hours must be >= 0 and minutes must be 0-59.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        setState(() { _isSubmitting = false; });
+        return;
+      }
+      if (hours == 0 && mins == 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}": '
+                  'Processing duration cannot be zero.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        setState(() { _isSubmitting = false; });
+        return;
+      }
+      final processingTimeMinutes = hours * 60 + mins;
+
+      // Validate break
+      if (task.breakEnabled) {
+        final breakMins = int.tryParse(task.breakDurationController.text) ?? 0;
+        if (breakMins <= 0 || breakMins > 480) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}": '
+                    'Break duration must be 1-480 minutes when break is enabled.'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+          setState(() { _isSubmitting = false; });
+          return;
+        }
+      }
+
+      final breakMins = task.breakEnabled
+          ? (int.tryParse(task.breakDurationController.text) ?? 0)
+          : 0;
+
       tasksData.add({
         'name': task.nameController.text.isNotEmpty ? task.nameController.text : "Task ${task.id}",
         'operation_type_id': task.operationType,
         'quantity_to_process': int.tryParse(task.quantityController.text) ??
                                int.tryParse(_totalQuantityController.text) ?? 0,
+        'processing_time_minutes': processingTimeMinutes,
+        'restricted_resource_id': task.restrictedResourceId,
+        'break_enabled': task.breakEnabled,
+        'break_type': task.breakEnabled ? 'MACHINE' : null,
+        'break_duration_minutes': breakMins,
       });
     }
 
@@ -248,6 +386,7 @@ class _NewJobOrderState extends State<NewJobOrder> {
       "total_quantity": int.tryParse(_totalQuantityController.text) ?? 1,
       "deadline": _deadline?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
       "created_by": null, 
+      "priority": _priority.toUpperCase(),
       "tasks": tasksData,
       "dependencies": dependencies,
     };
@@ -309,6 +448,9 @@ class _NewJobOrderState extends State<NewJobOrder> {
     for (var task in _tasks) {
       task.nameController.dispose();
       task.quantityController.dispose();
+      task.hoursController.dispose();
+      task.minutesController.dispose();
+      task.breakDurationController.dispose();
     }
     super.dispose();
   }
@@ -548,122 +690,276 @@ class _NewJobOrderState extends State<NewJobOrder> {
                   border: Border.all(color: AppColors.surfaceLight.withOpacity(0.4)),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 8, right: 20),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withOpacity(0.2),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.5)),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
+                    // ── Row 1: original task fields ──
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 8, right: 20),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary.withOpacity(0.2),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: task.nameController,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: _customInputDecoration('Task Name', 'e.g., Print Cover'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: TextField(
-                        controller: task.quantityController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: _customInputDecoration('Qty', 'e.g., 500'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: _isLoadingOps 
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: task.operationType,
-                        decoration: _customInputDecoration('Operation Type', null),
-                        dropdownColor: AppColors.surfaceLight,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                        items: _operationTypes.map((op) {
-                              return DropdownMenuItem<String>(
-                                value: op['id'].toString(),
-                                child: Text(op['name'].toString(), overflow: TextOverflow.ellipsis),
-                              );
-                            }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            task.operationType = newValue;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: GestureDetector(
-                        onTap: () => _showMultiSelect(context, task),
-                        child: Container(
-                          height: 56,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLight.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(12),
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: task.nameController,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: _customInputDecoration('Task Name', 'e.g., Print Cover'),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  task.dependsOn.isEmpty
-                                      ? 'Depends On'
-                                      : '${task.dependsOn.length} Selected',
-                                  style: TextStyle(
-                                    color: task.dependsOn.isEmpty
-                                        ? AppColors.textSecondary
-                                        : AppColors.textPrimary,
-                                    fontSize: 16,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: task.quantityController,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: _customInputDecoration('Qty', 'e.g., 500'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: _isLoadingOps
+                            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                            : DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            initialValue: task.operationType,
+                            decoration: _customInputDecoration('Operation Type', null),
+                            dropdownColor: AppColors.surfaceLight,
+                            icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+                            items: _operationTypes.map((op) {
+                                  return DropdownMenuItem<String>(
+                                    value: op['id'].toString(),
+                                    child: Text(op['name'].toString(), overflow: TextOverflow.ellipsis),
+                                  );
+                                }).toList(),
+                            onChanged: (newValue) {
+                              setState(() {
+                                task.operationType = newValue;
+                                // Clear resource restriction — it may no longer
+                                // be capable of the new operation type.
+                                task.restrictedResourceId = null;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () => _showMultiSelect(context, task),
+                            child: Container(
+                              height: 56,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const Icon(Icons.link, color: AppColors.primary, size: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      task.dependsOn.isEmpty
+                                          ? 'Depends On'
+                                          : '${task.dependsOn.length} Selected',
+                                      style: TextStyle(
+                                        color: task.dependsOn.isEmpty
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const Icon(Icons.link, color: AppColors.primary, size: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.error,
+                            ),
+                            onPressed: () => _removeTask(index),
+                            tooltip: 'Remove Task',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // ── Row 2: duration, resource restriction, break controls ──
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.surfaceLight.withOpacity(0.3)),
+                      ),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          // Hours input
+                          SizedBox(
+                            width: 90,
+                            child: TextField(
+                              controller: task.hoursController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: AppColors.textPrimary),
+                              decoration: _customInputDecoration('Hours', '0'),
+                            ),
+                          ),
+                          // Minutes input
+                          SizedBox(
+                            width: 100,
+                            child: TextField(
+                              controller: task.minutesController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: AppColors.textPrimary),
+                              decoration: _customInputDecoration('Mins (0-59)', '0'),
+                            ),
+                          ),
+                          // Resource restriction dropdown
+                          // Shows only resources capable of the selected operation type.
+                          // Falls back to all non-offline resources when unavailable.
+                          SizedBox(
+                            width: 220,
+                            child: _isLoadingResources
+                              ? const SizedBox(
+                                  width: 20, height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary, strokeWidth: 2))
+                              : FutureBuilder<List<Map<String, dynamic>>>(
+                                future: task.operationType != null
+                                    ? _fetchResourcesForOperation(task.operationType!)
+                                    : Future.value(_resources),
+                                builder: (ctx, snap) {
+                                  final resList = snap.data ?? _resources;
+                                  // If restrictedResourceId no longer in list, reset it
+                                  if (task.restrictedResourceId != null &&
+                                      !resList.any((r) =>
+                                          r['id']?.toString() ==
+                                          task.restrictedResourceId)) {
+                                    // Schedule reset outside build
+                                    Future.microtask(() {
+                                      if (mounted) {
+                                        setState(() {
+                                          task.restrictedResourceId = null;
+                                        });
+                                      }
+                                    });
+                                  }
+                                  return DropdownButtonFormField<String?>(
+                                    isExpanded: true,
+                                    value: task.restrictedResourceId,
+                                    decoration: _customInputDecoration(
+                                        'Resource Restriction', null),
+                                    dropdownColor: AppColors.surfaceLight,
+                                    icon: const Icon(Icons.keyboard_arrow_down,
+                                        color: AppColors.textSecondary),
+                                    style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 13),
+                                    items: [
+                                      const DropdownMenuItem<String?>(
+                                        value: null,
+                                        child: Text('No Resource Restriction',
+                                            overflow: TextOverflow.ellipsis),
+                                      ),
+                                      ...resList.map((r) =>
+                                          DropdownMenuItem<String?>(
+                                        value: r['id']?.toString(),
+                                        child: Text(
+                                          r['name']?.toString() ?? '',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      )),
+                                    ],
+                                    onChanged: (val) {
+                                      setState(() {
+                                        task.restrictedResourceId = val;
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                          ),
+
+                          // Break enable switch
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('Break',
+                                  style: TextStyle(
+                                      color: AppColors.textSecondary, fontSize: 13)),
+                              Switch(
+                                value: task.breakEnabled,
+                                activeColor: AppColors.primary,
+                                onChanged: (val) {
+                                  setState(() { task.breakEnabled = val; });
+                                },
+                              ),
                             ],
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                        ),
-                        onPressed: () => _removeTask(index),
-                        tooltip: 'Remove Task',
+                          // Break type and duration (shown only when enabled)
+                          if (task.breakEnabled) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text('MACHINE',
+                                  style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
+                            ),
+                            SizedBox(
+                              width: 120,
+                              child: TextField(
+                                controller: task.breakDurationController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(color: AppColors.textPrimary),
+                                decoration: _customInputDecoration('Break Mins', '5'),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
+
               );
             },
           ),

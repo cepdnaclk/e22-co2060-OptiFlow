@@ -174,6 +174,46 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ),
           ),
         ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: () async {
+            setState(() { _isLoading = true; });
+            final result = await _apiService.optimizeAll();
+            setState(() { _isLoading = false; });
+            if (result['status'] == 'success') {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Optimized successfully (${result['quality']})! Makespan: ${result['makespan_minutes']} min. ${result['warnings'] ?? ''}"), backgroundColor: AppColors.success),
+                );
+              }
+              _fetchData();
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Optimization failed: ${result['message']}"), backgroundColor: AppColors.error),
+                );
+              }
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "Optimize All",
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -735,12 +775,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         Color color;
         if (isConflict) {
           color = AppColors.error;
-        } else if (booking.priority == "High") {
-          color = const Color(0xFF0EA5E9);
-        } else if (booking.priority == "Medium") {
-          color = AppColors.secondary;
+        } else if (booking.priority.toUpperCase() == "HIGH") {
+          color = Colors.red;
+        } else if (booking.priority.toUpperCase() == "MEDIUM") {
+          color = Colors.orange;
         } else {
-          color = const Color(0xFFF97316);
+          color = Colors.green;
         }
 
         return Positioned(
@@ -749,7 +789,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           bottom: 8,
           width: width.clamp(48.0, totalWidth < 48.0 ? 48.0 : totalWidth),
           child: GestureDetector(
-            onTap: isConflict ? () => _cancelBooking(booking) : null,
+            onTap: () => _showTaskDetail(context, booking),
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 2),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -813,6 +853,170 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         );
       },
     );
+  }
+
+  void _showTaskDetail(BuildContext context, Booking booking) {
+    final isConflict = booking.status == 'CONFLICT';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                booking.taskName.isEmpty ? booking.jobTitle : booking.taskName,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
+              ),
+            ),
+            if (isConflict)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('CONFLICT',
+                    style: TextStyle(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
+              ),
+          ],
+        ),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detailRow(Icons.work_outline, 'Job', booking.jobTitle),
+              _detailRow(Icons.flag_outlined, 'Priority', booking.jobPriority),
+              _detailRow(Icons.task_alt, 'Task', booking.taskName.isEmpty ? '—' : booking.taskName),
+              _detailRow(Icons.numbers, 'Quantity', '${booking.quantity}'),
+              _detailRow(Icons.precision_manufacturing_outlined, 'Resource', booking.machineName),
+              const Divider(height: 24, color: AppColors.surfaceLight),
+              // ── Timeline ──────────────────────────────────────
+              _detailRow(
+                Icons.schedule,
+                'Processing',
+                '${booking.formattedStart} – ${booking.formattedProcessingEnd}',
+              ),
+              _detailRow(
+                Icons.av_timer,
+                'Duration',
+                '${booking.processingMinutes} min',
+              ),
+              const SizedBox(height: 4),
+              if (booking.breakEnabled) ...[  
+                _detailRow(
+                  Icons.pause_circle_outline,
+                  'Machine break',
+                  '${booking.formattedProcessingEnd} – ${booking.formattedRestEnd}',
+                  valueColor: AppColors.warning,
+                ),
+                _detailRow(
+                  Icons.timelapse,
+                  'Break type',
+                  booking.breakType ?? 'MACHINE',
+                  valueColor: AppColors.warning,
+                ),
+                _detailRow(
+                  Icons.timer_outlined,
+                  'Break duration',
+                  '${booking.breakDurationMinutes} min',
+                  valueColor: AppColors.warning,
+                ),
+              ] else
+                _detailRow(
+                  Icons.pause_circle_outline,
+                  'Machine break',
+                  'None',
+                  valueColor: AppColors.textSecondary,
+                ),
+              _detailRow(
+                Icons.check_circle_outline,
+                'Resource available',
+                booking.formattedRestEnd,
+                valueColor: AppColors.success,
+              ),
+              const Divider(height: 24, color: AppColors.surfaceLight),
+              _detailRow(
+                Icons.info_outline,
+                'Task status',
+                booking.taskStatus,
+                valueColor: _statusColor(booking.taskStatus),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          if (isConflict)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _cancelBooking(booking);
+              },
+              child: const Text('Cancel Booking',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close',
+                style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value,
+      {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 130,
+            child: Text('$label:',
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: valueColor ?? AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'SCHEDULED': return AppColors.primary;
+      case 'IN_PROGRESS': return AppColors.warning;
+      case 'COMPLETED': return AppColors.success;
+      case 'CONFLICT': return AppColors.error;
+      default: return AppColors.textSecondary;
+    }
   }
 
   Widget _buildTimelineFooter() {

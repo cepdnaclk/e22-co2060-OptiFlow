@@ -5,6 +5,7 @@ class Job {
   final String status;
   final String deadline;
   final int estimatedHours;
+  final String priority;
 
   Job({
     required this.id,
@@ -13,6 +14,7 @@ class Job {
     required this.status,
     required this.deadline,
     required this.estimatedHours,
+    this.priority = 'MEDIUM',
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Job {
       status: json['status'] ?? 'OPEN',
       deadline: json['deadline'] ?? '',
       estimatedHours: json['estimated_hours'] ?? 0,
+      priority: json['priority'] ?? 'MEDIUM',
     );
   }
 }

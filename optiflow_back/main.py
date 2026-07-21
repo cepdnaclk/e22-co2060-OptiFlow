@@ -4,8 +4,8 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional, List, Literal
 import traceback
 
 from booking_manager import check_availability, supabase
@@ -116,12 +116,20 @@ class TaskInput(BaseModel):
     operation_type_id: Optional[str] = None
     name: str
     quantity_to_process: int
+    # Task-level scheduling controls (new feature)
+    processing_time_minutes: Optional[int] = Field(None, gt=0,
+        description="Manual duration in minutes. Must be > 0 when provided.")
+    restricted_resource_id: Optional[str] = None
+    break_enabled: bool = False
+    break_type: Optional[Literal["MACHINE"]] = None
+    break_duration_minutes: int = Field(0, ge=0, le=480)
 
 class JobOrderInput(BaseModel):
     title: str
     client_name: Optional[str] = None
     total_quantity: int
     deadline: str 
+    priority: Literal["HIGH", "MEDIUM", "LOW"] = "MEDIUM"
     created_by: Optional[str] = None
     tasks: List[TaskInput]
     dependencies: List[TaskDependencyInput]
@@ -133,6 +141,7 @@ class SingleJobInput(BaseModel):
     client_name: Optional[str] = None
     total_quantity: int
     deadline: str 
+    priority: Literal["HIGH", "MEDIUM", "LOW"] = "MEDIUM"
     created_by: str 
 
 class SingleTaskInput(BaseModel):
@@ -140,6 +149,12 @@ class SingleTaskInput(BaseModel):
     operation_type_id: str 
     name: str
     quantity_to_process: int
+    # Task-level scheduling controls
+    processing_time_minutes: Optional[int] = Field(None, gt=0)
+    restricted_resource_id: Optional[str] = None
+    break_enabled: bool = False
+    break_type: Optional[Literal["MACHINE"]] = None
+    break_duration_minutes: int = Field(0, ge=0, le=480)
 
 
 # ------------------- ROOT -------------------
@@ -265,7 +280,13 @@ def create_job(order: JobOrderInput):
                 "operation_type_id": task.operation_type_id,
                 "name": task.name,
                 "quantity_to_process": task.quantity_to_process,
-                "status": "PENDING"
+                "status": "PENDING",
+                # Task-level break & duration fields
+                "processing_time_minutes": task.processing_time_minutes,
+                "restricted_resource_id": task.restricted_resource_id,
+                "break_enabled": task.break_enabled,
+                "break_type": task.break_type,
+                "break_duration_minutes": task.break_duration_minutes,
             }
             task_response = supabase.table("tasks").insert(task_data).execute()
             task_uuid_map[index] = task_response.data[0]['id']
@@ -323,7 +344,13 @@ def create_single_task(task: SingleTaskInput):
             "operation_type_id": task.operation_type_id,
             "name": task.name,
             "quantity_to_process": task.quantity_to_process,
-            "status": "PENDING"
+            "status": "PENDING",
+            # Task-level break & duration fields
+            "processing_time_minutes": task.processing_time_minutes,
+            "restricted_resource_id": task.restricted_resource_id,
+            "break_enabled": task.break_enabled,
+            "break_type": task.break_type,
+            "break_duration_minutes": task.break_duration_minutes,
         }
         response = supabase.table("tasks").insert(task_data).execute()
         
