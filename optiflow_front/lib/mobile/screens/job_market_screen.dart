@@ -33,12 +33,13 @@ class _JobMarketScreenState extends State<JobMarketScreen> {
       // Fetch ALL jobs from Supabase directly (no status filter).
       // Seeded jobs are DRAFT — if we filtered for OPEN they'd never appear.
       final raw = await SupabaseService.instance.fetchJobsWithTasks();
-      final jobs = raw.map((json) {
-        return JobModel.fromJson({
-          ...json,
-          // Expose task count for the job card
-          'task_count': (json['tasks'] as List?)?.length ?? 0,
-        });
+      final jobs = raw.where((json) {
+        final visibleTasks = (json['tasks'] as List?)
+            ?.where((t) => (t as Map)['show_in_mobile'] == true)
+            .toList() ?? [];
+        return visibleTasks.isNotEmpty;
+      }).map((json) {
+        return JobModel.fromJson(json);
       }).toList();
       if (mounted) setState(() { _jobs = jobs; _loading = false; });
     } catch (e) {
@@ -107,12 +108,14 @@ class _JobMarketScreenState extends State<JobMarketScreen> {
             // ── Error ────────────────────────────────────────────────────────
             else if (_error != null)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: _errorState(),
               )
 
             // ── Empty ────────────────────────────────────────────────────────
             else if (_jobs.isEmpty)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: _emptyState(),
               )
 

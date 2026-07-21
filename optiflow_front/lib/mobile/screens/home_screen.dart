@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Fetch all tasks from Supabase directly — works without FastAPI.
       // For MVP: shows the whole factory floor view (all tasks, all machines).
       final raw = await SupabaseService.instance.fetchAllTasks();
-      final tasks = raw.map((json) {
+      final tasks = raw.where((json) => json['show_in_mobile'] == true).map((json) {
         // Remap Supabase join shape → TaskModel.fromJson expected shape
         return TaskModel.fromJson({
           ...json,
@@ -184,12 +184,14 @@ class _HomeScreenState extends State<HomeScreen> {
             // ── Error state ──────────────────────────────────────────────────
             else if (_error != null)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: _errorState(),
               )
 
             // ── Empty state ──────────────────────────────────────────────────
             else if (_tasks.isEmpty)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: _emptyState(),
               )
 

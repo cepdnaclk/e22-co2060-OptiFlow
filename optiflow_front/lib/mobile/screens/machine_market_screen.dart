@@ -111,7 +111,7 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
 
             // ── Error ────────────────────────────────────────────────────────
             else if (_error != null)
-              SliverFillRemaining(child: _errorState())
+              SliverFillRemaining(hasScrollBody: false, child: _errorState())
 
             // ── Grid ─────────────────────────────────────────────────────────
             else

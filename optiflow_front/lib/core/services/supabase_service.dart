@@ -126,7 +126,7 @@ class SupabaseService {
           .select('''
             id, title, client_name, total_quantity, status, deadline, created_at,
             tasks (
-              id, name, status, quantity_to_process,
+              id, name, status, quantity_to_process, show_in_mobile,
               scheduled_start_time, scheduled_end_time,
               operation_type_id,
               operation_types ( name ),
@@ -151,7 +151,7 @@ class SupabaseService {
       final res = await _db
           .from('tasks')
           .select('''
-            id, name, status, quantity_to_process,
+            id, name, status, quantity_to_process, show_in_mobile,
             scheduled_start_time, scheduled_end_time,
             operation_type_id,
             jobs ( id, title, client_name, deadline ),
@@ -162,6 +162,19 @@ class SupabaseService {
     } catch (e) {
       print('[SupabaseService] fetchAllTasks: $e');
       return [];
+    }
+  }
+
+  /// Toggle task mobile visibility
+  Future<void> toggleTaskMobileVisibility(String taskId, bool isVisible) async {
+    try {
+      await _db.from('tasks').update({
+        'show_in_mobile': isVisible,
+      }).eq('id', taskId);
+      invalidateCache();
+    } catch (e) {
+      print('[SupabaseService] toggleTaskMobileVisibility: $e');
+      rethrow;
     }
   }
 

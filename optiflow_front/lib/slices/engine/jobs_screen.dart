@@ -468,6 +468,44 @@ class _JobsScreenState extends State<JobsScreen> {
             ),
           ),
           _taskStatusBadge(taskStatus),
+          const SizedBox(width: 8),
+          Builder(
+            builder: (ctx) {
+              final isVisible = task['show_in_mobile'] == true;
+              return Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isVisible ? AppColors.primary.withOpacity(0.15) : AppColors.surfaceLight.withOpacity(0.3),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  tooltip: isVisible ? 'Hide from Mobile App' : 'Show in Mobile App',
+                  icon: Icon(
+                    isVisible ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                    size: 16,
+                    color: isVisible ? AppColors.primary : AppColors.textSecondary.withOpacity(0.5),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await SupabaseService.instance.toggleTaskMobileVisibility(
+                        task['id'].toString(),
+                        !isVisible,
+                      );
+                      _fetchJobs();
+                    } catch (e) {
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(content: Text('Failed to update visibility')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
