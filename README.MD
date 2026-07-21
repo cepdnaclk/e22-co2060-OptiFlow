@@ -1,4 +1,4 @@
-# 🖨️ OptiFlow V2: Enterprise Print Shop Scheduler
+# 🖨️ OptiFlow: Enterprise Print Shop Scheduler
 
 ![Flutter](https://img.shields.io/badge/Frontend-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
