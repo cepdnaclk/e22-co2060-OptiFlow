@@ -24,8 +24,8 @@
     ],
     "supervisors": [
         {
-            "name": "",
-            "email": ""
+            "name": "S. Ganathipan",
+            "email": "e21148@eng.pdn.ac.lk"
         }
     ],
     "tags": [
@@ -34,7 +34,7 @@
         "Flutter",
         "Python"
     ],
-    "tags": ["Web", "Software Systems", "CO2060"],
+    
     "image": "coverpage.png",
-    "thumbnail": "coverpage.png"
+    "thumbnail": "thumbnail.png"
 }
