@@ -20,7 +20,6 @@ class _TeamScreenState extends State<TeamScreen> {
   void initState() {
     super.initState();
     _fetchTeam();
-    
   }
 
   /// Extracts role from name format "Name (Role)" — falls back to "Team Member"
@@ -51,7 +50,13 @@ class _TeamScreenState extends State<TeamScreen> {
           ? '${emailParts[0].toLowerCase()}.${emailParts[1].toLowerCase()}@optiflow.com'
           : '${displayName.toLowerCase().replaceAll(' ', '')}@optiflow.com';
 
-      final colors = [Colors.blue, Colors.purple, Colors.teal, Colors.orange, Colors.green];
+      final colors = [
+        Colors.blue,
+        Colors.purple,
+        Colors.teal,
+        Colors.orange,
+        Colors.green,
+      ];
       final color = colors[rawName.length % colors.length];
 
       return {
@@ -61,8 +66,8 @@ class _TeamScreenState extends State<TeamScreen> {
         "status": r['status'] == "ACTIVE"
             ? "Active"
             : r['status'] == "OFFLINE"
-                ? "Offline"
-                : "Idle",
+            ? "Offline"
+            : "Idle",
         "email": email,
         "avatar": initials.toUpperCase(),
         "color": color,
@@ -80,7 +85,9 @@ class _TeamScreenState extends State<TeamScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     return SingleChildScrollView(
@@ -96,7 +103,11 @@ class _TeamScreenState extends State<TeamScreen> {
                 padding: const EdgeInsets.all(64.0),
                 child: Column(
                   children: [
-                    Icon(Icons.people_outline, size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
+                    Icon(
+                      Icons.people_outline,
+                      size: 64,
+                      color: AppColors.textSecondary.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       "No team members yet.\nClick \"Add Member\" to get started.",
@@ -166,7 +177,11 @@ class _TeamScreenState extends State<TeamScreen> {
                 SizedBox(width: 8),
                 Text(
                   "Add Member",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 15,
+                  ),
                 ),
               ],
             ),
@@ -198,11 +213,16 @@ class _TeamScreenState extends State<TeamScreen> {
               backgroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+                side: BorderSide(
+                  color: AppColors.surfaceLight.withOpacity(0.5),
+                ),
               ),
               title: const Text(
                 "Add New Team Member",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SizedBox(
                 width: 400,
@@ -212,7 +232,11 @@ class _TeamScreenState extends State<TeamScreen> {
                   children: [
                     const Text(
                       "Full Name",
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -220,7 +244,9 @@ class _TeamScreenState extends State<TeamScreen> {
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: "e.g. Sarah Chen",
-                        hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                        hintStyle: TextStyle(
+                          color: AppColors.textSecondary.withOpacity(0.5),
+                        ),
                         filled: true,
                         fillColor: AppColors.surfaceLight.withOpacity(0.3),
                         border: OutlineInputBorder(
@@ -229,14 +255,21 @@ class _TeamScreenState extends State<TeamScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
                     const Text(
                       "Role",
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -250,13 +283,25 @@ class _TeamScreenState extends State<TeamScreen> {
                           isExpanded: true,
                           value: selectedRole,
                           dropdownColor: AppColors.surfaceLight,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                          ),
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: AppColors.textSecondary,
+                          ),
                           items: roles
-                              .map((r) => DropdownMenuItem<String>(value: r, child: Text(r)))
+                              .map(
+                                (r) => DropdownMenuItem<String>(
+                                  value: r,
+                                  child: Text(r),
+                                ),
+                              )
                               .toList(),
                           onChanged: (val) {
-                            if (val != null) setDialogState(() => selectedRole = val);
+                            if (val != null)
+                              setDialogState(() => selectedRole = val);
                           },
                         ),
                       ),
@@ -267,20 +312,33 @@ class _TeamScreenState extends State<TeamScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text("Cancel", style: TextStyle(color: AppColors.textSecondary)),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                     onPressed: isSubmitting
                         ? null
@@ -298,9 +356,12 @@ class _TeamScreenState extends State<TeamScreen> {
                             setDialogState(() => isSubmitting = true);
 
                             // Store role embedded in name: "Name (Role)"
-                            final storedName = "${nameController.text.trim()} ($selectedRole)";
+                            final storedName =
+                                "${nameController.text.trim()} ($selectedRole)";
                             try {
-                              final url = Uri.parse("${ApiService.baseUrl}/resources");
+                              final url = Uri.parse(
+                                "${ApiService.baseUrl}/resources",
+                              );
                               final response = await http.post(
                                 url,
                                 headers: {"Content-Type": "application/json"},
@@ -311,19 +372,25 @@ class _TeamScreenState extends State<TeamScreen> {
                                 }),
                               );
 
-                              if (response.statusCode == 200 || response.statusCode == 201) {
+                              if (response.statusCode == 200 ||
+                                  response.statusCode == 201) {
                                 if (!ctx.mounted) return;
                                 Navigator.pop(ctx);
                                 _fetchTeam();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text("Team member added successfully!"),
+                                    content: Text(
+                                      "Team member added successfully!",
+                                    ),
                                     backgroundColor: AppColors.success,
                                   ),
                                 );
                               } else {
                                 final body = json.decode(response.body);
-                                throw Exception(body['detail'] ?? "Failed: ${response.statusCode}");
+                                throw Exception(
+                                  body['detail'] ??
+                                      "Failed: ${response.statusCode}",
+                                );
                               }
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -339,9 +406,18 @@ class _TeamScreenState extends State<TeamScreen> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
-                        : const Text("Add Member", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        : const Text(
+                            "Add Member",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -440,7 +516,10 @@ class _TeamScreenState extends State<TeamScreen> {
                 const SizedBox(height: 2),
                 Text(
                   member["role"],
-                  style: const TextStyle(fontSize: 13, color: AppColors.primary),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.primary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -479,9 +558,19 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   // ── Edit member dialog ───────────────────────────────────────────────────
-  void _showEditMemberDialog(BuildContext context, Map<String, dynamic> member) {
+  void _showEditMemberDialog(
+    BuildContext context,
+    Map<String, dynamic> member,
+  ) {
     final nameCtrl = TextEditingController(text: _displayName(member['name']));
-    final roles = ['Operator', 'Supervisor', 'Technician', 'Machine Operator', 'Quality Inspector', 'Logistics'];
+    final roles = [
+      'Operator',
+      'Supervisor',
+      'Technician',
+      'Machine Operator',
+      'Quality Inspector',
+      'Logistics',
+    ];
     String selectedRole = member['role'] as String;
     String selectedStatus = member['status'] as String;
     if (!roles.contains(selectedRole)) selectedRole = 'Operator';
@@ -496,72 +585,156 @@ class _TeamScreenState extends State<TeamScreen> {
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
           ),
-          title: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text('Edit Team Member', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
-          ]),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.edit_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Edit Team Member',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
           content: SizedBox(
             width: 400,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Full Name', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Full Name',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: nameCtrl,
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'e.g. Sarah Chen',
-                    hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondary.withOpacity(0.5),
+                    ),
                     filled: true,
                     fillColor: AppColors.surfaceLight.withOpacity(0.3),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text('Role', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Role',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(color: AppColors.surfaceLight.withOpacity(0.3), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       isExpanded: true,
                       value: selectedRole,
                       dropdownColor: AppColors.surfaceLight,
-                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                      icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-                      items: roles.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
-                      onChanged: (v) { if (v != null) setDialogState(() => selectedRole = v); },
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                      ),
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: AppColors.textSecondary,
+                      ),
+                      items: roles
+                          .map(
+                            (r) => DropdownMenuItem(value: r, child: Text(r)),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setDialogState(() => selectedRole = v);
+                      },
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text('Status', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Status',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: ['Active', 'Idle', 'Offline'].map((s) {
                     final isSel = selectedStatus == s;
-                    final c = s == 'Active' ? AppColors.success : s == 'Idle' ? AppColors.warning : AppColors.textSecondary;
+                    final c = s == 'Active'
+                        ? AppColors.success
+                        : s == 'Idle'
+                        ? AppColors.warning
+                        : AppColors.textSecondary;
                     return GestureDetector(
                       onTap: () => setDialogState(() => selectedStatus = s),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSel ? c.withOpacity(0.2) : AppColors.surfaceLight.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isSel ? c : AppColors.surfaceLight.withOpacity(0.4), width: isSel ? 2 : 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
                         ),
-                        child: Text(s, style: TextStyle(color: isSel ? c : AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
+                        decoration: BoxDecoration(
+                          color: isSel
+                              ? c.withOpacity(0.2)
+                              : AppColors.surfaceLight.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSel
+                                ? c
+                                : AppColors.surfaceLight.withOpacity(0.4),
+                            width: isSel ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          s,
+                          style: TextStyle(
+                            color: isSel ? c : AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -572,7 +745,10 @@ class _TeamScreenState extends State<TeamScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
             // Delete button
             TextButton(
@@ -580,55 +756,93 @@ class _TeamScreenState extends State<TeamScreen> {
                 Navigator.pop(ctx);
                 _showDeleteMemberConfirm(context, member);
               },
-              child: const Text('Remove', style: TextStyle(color: AppColors.error)),
+              child: const Text(
+                'Remove',
+                style: TextStyle(color: AppColors.error),
+              ),
             ),
             Container(
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8)],
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
-                onPressed: isSubmitting ? null : () async {
-                  final name = nameCtrl.text.trim();
-                  if (name.isEmpty) return;
-                  setDialogState(() => isSubmitting = true);
-                  // Store role embedded: "Name (Role)"
-                  final storedName = '$name ($selectedRole)';
-                  // Map display status to DB status
-                  final dbStatus = selectedStatus == 'Active' ? 'ACTIVE' : selectedStatus == 'Idle' ? 'IDLE' : 'OFFLINE';
-                  try {
-                    await SupabaseService.instance.updateTeamMember(
-                      id: member['id'].toString(),
-                      name: storedName,
-                      status: dbStatus,
-                    );
-                    if (!ctx.mounted) return;
-                    Navigator.pop(ctx);
-                    _fetchTeam();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Team member updated!'), backgroundColor: AppColors.success),
-                      );
-                    }
-                  } catch (e) {
-                    setDialogState(() => isSubmitting = false);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-                      );
-                    }
-                  }
-                },
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        final name = nameCtrl.text.trim();
+                        if (name.isEmpty) return;
+                        setDialogState(() => isSubmitting = true);
+                        // Store role embedded: "Name (Role)"
+                        final storedName = '$name ($selectedRole)';
+                        // Map display status to DB status
+                        final dbStatus = selectedStatus == 'Active'
+                            ? 'ACTIVE'
+                            : selectedStatus == 'Idle'
+                            ? 'IDLE'
+                            : 'OFFLINE';
+                        try {
+                          await SupabaseService.instance.updateTeamMember(
+                            id: member['id'].toString(),
+                            name: storedName,
+                            status: dbStatus,
+                          );
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          _fetchTeam();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Team member updated!'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setDialogState(() => isSubmitting = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
                 child: isSubmitting
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -637,35 +851,55 @@ class _TeamScreenState extends State<TeamScreen> {
     );
   }
 
-  void _showDeleteMemberConfirm(BuildContext context, Map<String, dynamic> member) {
+  void _showDeleteMemberConfirm(
+    BuildContext context,
+    Map<String, dynamic> member,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove Member?', style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          'Remove Member?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text(
           'Remove "${_displayName(member['name'] as String)}" from the team? This cannot be undone.',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                await SupabaseService.instance.deleteMachine(member['id'].toString());
+                await SupabaseService.instance.deleteMachine(
+                  member['id'].toString(),
+                );
                 _fetchTeam();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Member removed.'), backgroundColor: AppColors.warning),
+                    const SnackBar(
+                      content: Text('Member removed.'),
+                      backgroundColor: AppColors.warning,
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: AppColors.error,
+                    ),
                   );
                 }
               }

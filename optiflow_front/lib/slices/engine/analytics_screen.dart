@@ -17,13 +17,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _isLoading = true;
   int _totalJobs = 0;
   String _selectedFilter = 'Last 30 Days';
-  
+
   // Job Status Counts
   int _completedJobs = 0;
   int _inProgressJobs = 0;
   int _pendingJobs = 0;
   int _failedJobs = 0;
-  
+
   double _oeeScore = 0.0;
   double _defectRate = 0.0;
   double _leadTime = 0.0;
@@ -31,9 +31,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   int get _filterDays {
     switch (_selectedFilter) {
-      case 'Last 7 Days': return 7;
-      case 'This Year': return 365;
-      default: return 30;
+      case 'Last 7 Days':
+        return 7;
+      case 'This Year':
+        return 365;
+      default:
+        return 30;
     }
   }
 
@@ -44,10 +47,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _fetchAnalyticsData() async {
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
     try {
       final jobs = await _apiService.fetchJobsFiltered(_filterDays);
-      
+
       int completed = 0;
       int inProgress = 0;
       int pending = 0;
@@ -58,13 +63,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           completed++;
         } else if (job.status == 'IN_PROGRESS' || job.status == 'TAKEN') {
           inProgress++;
-        } else if (job.status == 'DRAFT' || job.status == 'OPEN' || job.status == 'REVIEW') {
+        } else if (job.status == 'DRAFT' ||
+            job.status == 'OPEN' ||
+            job.status == 'REVIEW') {
           pending++;
         } else {
           failed++;
         }
       }
-      
+
       final machinesList = await _apiService.fetchMachines();
 
       if (mounted) {
@@ -74,7 +81,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           _inProgressJobs = inProgress;
           _pendingJobs = pending;
           _failedJobs = failed;
-          
+
           if (_totalJobs > 0) {
             _oeeScore = (completed / _totalJobs) * 100;
             _defectRate = (failed / _totalJobs) * 100;
@@ -84,7 +91,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             _defectRate = 0;
             _leadTime = 0;
           }
-          
+
           _machines = machinesList;
           _isLoading = false;
         });
@@ -102,7 +109,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     return SingleChildScrollView(
@@ -155,10 +164,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: DropdownButton<String>(
               value: _selectedFilter,
               dropdownColor: AppColors.surface,
-              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-              icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-              items: <String>['Last 7 Days', 'Last 30 Days', 'This Year']
-                  .map((String value) {
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.textSecondary,
+              ),
+              items: <String>['Last 7 Days', 'Last 30 Days', 'This Year'].map((
+                String value,
+              ) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
@@ -166,7 +182,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               }).toList(),
               onChanged: (val) {
                 if (val != null && val != _selectedFilter) {
-                  setState(() { _selectedFilter = val; });
+                  setState(() {
+                    _selectedFilter = val;
+                  });
                   _fetchAnalyticsData();
                 }
               },
@@ -287,8 +305,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -406,50 +428,74 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   PieChartData(
                     sectionsSpace: 2,
                     centerSpaceRadius: 60,
-                    sections: _totalJobs == 0 
-                      ? [
-                          PieChartSectionData(
-                            color: AppColors.textSecondary.withOpacity(0.2),
-                            value: 100,
-                            title: '0%',
-                            radius: 30,
-                            titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                          )
-                        ]
-                      : [
-                      if (_completedJobs > 0)
-                        PieChartSectionData(
-                          color: AppColors.success,
-                          value: _completedJobs.toDouble(),
-                          title: '${((_completedJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
-                          radius: 30,
-                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      if (_inProgressJobs > 0)
-                        PieChartSectionData(
-                          color: AppColors.warning,
-                          value: _inProgressJobs.toDouble(),
-                          title: '${((_inProgressJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
-                          radius: 30,
-                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      if (_pendingJobs > 0)
-                        PieChartSectionData(
-                          color: AppColors.primary,
-                          value: _pendingJobs.toDouble(),
-                          title: '${((_pendingJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
-                          radius: 30,
-                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      if (_failedJobs > 0)
-                        PieChartSectionData(
-                          color: AppColors.error,
-                          value: _failedJobs.toDouble(),
-                          title: '${((_failedJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
-                          radius: 30,
-                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                    ],
+                    sections: _totalJobs == 0
+                        ? [
+                            PieChartSectionData(
+                              color: AppColors.textSecondary.withOpacity(0.2),
+                              value: 100,
+                              title: '0%',
+                              radius: 30,
+                              titleStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ]
+                        : [
+                            if (_completedJobs > 0)
+                              PieChartSectionData(
+                                color: AppColors.success,
+                                value: _completedJobs.toDouble(),
+                                title:
+                                    '${((_completedJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
+                                radius: 30,
+                                titleStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            if (_inProgressJobs > 0)
+                              PieChartSectionData(
+                                color: AppColors.warning,
+                                value: _inProgressJobs.toDouble(),
+                                title:
+                                    '${((_inProgressJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
+                                radius: 30,
+                                titleStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            if (_pendingJobs > 0)
+                              PieChartSectionData(
+                                color: AppColors.primary,
+                                value: _pendingJobs.toDouble(),
+                                title:
+                                    '${((_pendingJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
+                                radius: 30,
+                                titleStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            if (_failedJobs > 0)
+                              PieChartSectionData(
+                                color: AppColors.error,
+                                value: _failedJobs.toDouble(),
+                                title:
+                                    '${((_failedJobs / _totalJobs) * 100).toStringAsFixed(0)}%',
+                                radius: 30,
+                                titleStyle: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                          ],
                   ),
                 ),
                 Text(
@@ -496,10 +542,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         const SizedBox(width: 4),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -534,40 +577,103 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           const SizedBox(height: 16),
           DataTable(
             columns: const [
-              DataColumn(label: Text("Machine Name", style: TextStyle(fontWeight: FontWeight.bold))),
-              DataColumn(label: Text("Uptime", style: TextStyle(fontWeight: FontWeight.bold))),
-              DataColumn(label: Text("Output Volume", style: TextStyle(fontWeight: FontWeight.bold))),
-              DataColumn(label: Text("Efficiency", style: TextStyle(fontWeight: FontWeight.bold))),
-              DataColumn(label: Text("Status", style: TextStyle(fontWeight: FontWeight.bold))),
+              DataColumn(
+                label: Text(
+                  "Machine Name",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  "Uptime",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  "Output Volume",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  "Efficiency",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  "Status",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
-            rows: _machines.isEmpty 
-              ? [
-                  const DataRow(cells: [
-                    DataCell(Text("No Machines Found")),
-                    DataCell(Text("-")),
-                    DataCell(Text("-")),
-                    DataCell(Text("-")),
-                    DataCell(Text("-")),
-                  ])
-                ]
-              : _machines.map((m) {
-                  final uptime = m.status == "ACTIVE" ? "98.5%" : m.status == "IDLE" ? "85.2%" : "60.0%";
-                  final output = m.status == "ACTIVE" ? "4,520 units" : m.status == "IDLE" ? "1,200 units" : "450 units";
-                  final efficiency = m.status == "ACTIVE" ? "92%" : m.status == "IDLE" ? "78%" : "55%";
-                  final statusText = m.status == "ACTIVE" ? "Optimal" : m.status == "IDLE" ? "Needs Maint." : "Under Repair";
-                  final color = m.status == "ACTIVE" ? AppColors.success : m.status == "IDLE" ? AppColors.warning : AppColors.error;
-                  return _buildDataRow(m.name, uptime, output, efficiency, statusText, color);
-                }).toList(),
+            rows: _machines.isEmpty
+                ? [
+                    const DataRow(
+                      cells: [
+                        DataCell(Text("No Machines Found")),
+                        DataCell(Text("-")),
+                        DataCell(Text("-")),
+                        DataCell(Text("-")),
+                        DataCell(Text("-")),
+                      ],
+                    ),
+                  ]
+                : _machines.map((m) {
+                    final uptime = m.status == "ACTIVE"
+                        ? "98.5%"
+                        : m.status == "IDLE"
+                        ? "85.2%"
+                        : "60.0%";
+                    final output = m.status == "ACTIVE"
+                        ? "4,520 units"
+                        : m.status == "IDLE"
+                        ? "1,200 units"
+                        : "450 units";
+                    final efficiency = m.status == "ACTIVE"
+                        ? "92%"
+                        : m.status == "IDLE"
+                        ? "78%"
+                        : "55%";
+                    final statusText = m.status == "ACTIVE"
+                        ? "Optimal"
+                        : m.status == "IDLE"
+                        ? "Needs Maint."
+                        : "Under Repair";
+                    final color = m.status == "ACTIVE"
+                        ? AppColors.success
+                        : m.status == "IDLE"
+                        ? AppColors.warning
+                        : AppColors.error;
+                    return _buildDataRow(
+                      m.name,
+                      uptime,
+                      output,
+                      efficiency,
+                      statusText,
+                      color,
+                    );
+                  }).toList(),
           ),
         ],
       ),
     );
   }
 
-  DataRow _buildDataRow(String name, String uptime, String output, String efficiency, String status, Color statusColor) {
+  DataRow _buildDataRow(
+    String name,
+    String uptime,
+    String output,
+    String efficiency,
+    String status,
+    Color statusColor,
+  ) {
     return DataRow(
       cells: [
-        DataCell(Text(name, style: const TextStyle(fontWeight: FontWeight.w600))),
+        DataCell(
+          Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ),
         DataCell(Text(uptime)),
         DataCell(Text(output)),
         DataCell(Text(efficiency)),
@@ -580,7 +686,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
             child: Text(
               status,
-              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                color: statusColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
         ),

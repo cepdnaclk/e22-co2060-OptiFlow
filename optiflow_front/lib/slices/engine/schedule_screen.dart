@@ -26,7 +26,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _fetchData() async {
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
     final machines = await _apiService.fetchMachines();
     final bookings = await _apiService.fetchBookings();
 
@@ -45,11 +47,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          const Icon(Icons.warning_amber_rounded, color: AppColors.error),
-          const SizedBox(width: 8),
-          const Text('Cancel Booking?', style: TextStyle(color: AppColors.textPrimary)),
-        ]),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            const SizedBox(width: 8),
+            const Text(
+              'Cancel Booking?',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+          ],
+        ),
         content: Text(
           'Cancel "${booking.jobTitle}" on this machine? This will free the slot and remove the conflict.',
           style: const TextStyle(color: AppColors.textSecondary),
@@ -57,12 +64,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep It', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text(
+              'Keep It',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Cancel Booking', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Cancel Booking',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -95,7 +108,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     final dayBookings = _bookings.where((b) {
@@ -181,7 +196,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   void _showNewBookingDialog(BuildContext context) {
     if (_machines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No machines available. Please add machines first."), backgroundColor: AppColors.warning),
+        const SnackBar(
+          content: Text("No machines available. Please add machines first."),
+          backgroundColor: AppColors.warning,
+        ),
       );
       return;
     }
@@ -201,11 +219,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               backgroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+                side: BorderSide(
+                  color: AppColors.surfaceLight.withOpacity(0.5),
+                ),
               ),
               title: const Text(
                 "New Machine Booking",
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 20),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
               content: SizedBox(
                 width: 480,
@@ -214,14 +238,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // User / Operator name
-                    const Text("Operator Name", style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Operator Name",
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: "e.g. Sarah Chen",
-                        hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                        hintStyle: TextStyle(
+                          color: AppColors.textSecondary.withOpacity(0.5),
+                        ),
                         filled: true,
                         fillColor: AppColors.surfaceLight.withOpacity(0.4),
                         border: OutlineInputBorder(
@@ -230,14 +263,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
 
                     // Machine selection
-                    const Text("Select Machine", style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Select Machine",
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -250,8 +293,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           isExpanded: true,
                           value: selectedMachineId,
                           dropdownColor: AppColors.surfaceLight,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                          ),
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: AppColors.textSecondary,
+                          ),
                           items: _machines.map((m) {
                             return DropdownMenuItem<String>(
                               value: m.id,
@@ -259,7 +308,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             );
                           }).toList(),
                           onChanged: (val) {
-                            setDialogState(() { selectedMachineId = val; });
+                            setDialogState(() {
+                              selectedMachineId = val;
+                            });
                           },
                         ),
                       ),
@@ -274,7 +325,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             ctx,
                             label: "Start Time",
                             value: startDateTime,
-                            onPicked: (dt) => setDialogState(() => startDateTime = dt),
+                            onPicked: (dt) =>
+                                setDialogState(() => startDateTime = dt),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -283,7 +335,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             ctx,
                             label: "End Time",
                             value: endDateTime,
-                            onPicked: (dt) => setDialogState(() => endDateTime = dt),
+                            onPicked: (dt) =>
+                                setDialogState(() => endDateTime = dt),
                           ),
                         ),
                       ],
@@ -294,59 +347,116 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text("Cancel", style: TextStyle(color: AppColors.textSecondary)),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
                 Container(
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
-                    onPressed: isSubmitting ? null : () async {
-                      if (nameController.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter operator name"), backgroundColor: AppColors.error));
-                        return;
-                      }
-                      if (selectedMachineId == null || startDateTime == null || endDateTime == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields"), backgroundColor: AppColors.error));
-                        return;
-                      }
-                      if (endDateTime!.isBefore(startDateTime!)) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("End time must be after start time"), backgroundColor: AppColors.error));
-                        return;
-                      }
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            if (nameController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please enter operator name"),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
+                            if (selectedMachineId == null ||
+                                startDateTime == null ||
+                                endDateTime == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please fill all fields"),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
+                            if (endDateTime!.isBefore(startDateTime!)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "End time must be after start time",
+                                  ),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                              return;
+                            }
 
-                      setDialogState(() => isSubmitting = true);
-                      final success = await _apiService.createBooking(
-                        machineId: selectedMachineId!,
-                        userName: nameController.text,
-                        startTime: startDateTime!.toUtc().toIso8601String(),
-                        endTime: endDateTime!.toUtc().toIso8601String(),
-                      );
+                            setDialogState(() => isSubmitting = true);
+                            final success = await _apiService.createBooking(
+                              machineId: selectedMachineId!,
+                              userName: nameController.text,
+                              startTime: startDateTime!
+                                  .toUtc()
+                                  .toIso8601String(),
+                              endTime: endDateTime!.toUtc().toIso8601String(),
+                            );
 
-                      if (!mounted) return;
-                      Navigator.pop(ctx);
-                      if (success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Booking confirmed!"), backgroundColor: AppColors.success),
-                        );
-                        _fetchData(); // Refresh
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Booking failed — slot may already be taken."), backgroundColor: AppColors.error),
-                        );
-                      }
-                    },
+                            if (!mounted) return;
+                            Navigator.pop(ctx);
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Booking confirmed!"),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                              _fetchData(); // Refresh
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Booking failed — slot may already be taken.",
+                                  ),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          },
                     child: isSubmitting
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("Confirm Booking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Confirm Booking",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -377,7 +487,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 onPrimary: Colors.white,
                 surface: AppColors.surface,
                 onSurface: AppColors.textPrimary,
-              ), dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
+              ),
+              dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
             ),
             child: child!,
           ),
@@ -401,12 +512,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           ),
         );
         if (time == null) return;
-        onPicked(DateTime(date.year, date.month, date.day, time.hour, time.minute));
+        onPicked(
+          DateTime(date.year, date.month, date.day, time.hour, time.minute),
+        );
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -416,13 +536,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.access_time, color: AppColors.primary, size: 18),
+                const Icon(
+                  Icons.access_time,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    value != null ? DateFormat('MMM d, h:mm a').format(value) : "Pick date & time",
+                    value != null
+                        ? DateFormat('MMM d, h:mm a').format(value)
+                        : "Pick date & time",
                     style: TextStyle(
-                      color: value != null ? AppColors.textPrimary : AppColors.textSecondary.withOpacity(0.7),
+                      color: value != null
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary.withOpacity(0.7),
                       fontSize: 14,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -446,25 +574,40 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceLight.withOpacity(0.5)),
+              border: Border.all(
+                color: AppColors.surfaceLight.withOpacity(0.5),
+              ),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 5)),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
+                  icon: const Icon(
+                    Icons.chevron_left,
+                    color: AppColors.textPrimary,
+                  ),
                   onPressed: () {
                     setState(() {
-                      _selectedDate = _selectedDate.subtract(const Duration(days: 1));
+                      _selectedDate = _selectedDate.subtract(
+                        const Duration(days: 1),
+                      );
                     });
                   },
                 ),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+                    const Icon(
+                      Icons.calendar_today,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Text(
                       DateFormat('EEEE, MMMM d, y').format(_selectedDate),
@@ -477,10 +620,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
+                  icon: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textPrimary,
+                  ),
                   onPressed: () {
                     setState(() {
-                      _selectedDate = _selectedDate.add(const Duration(days: 1));
+                      _selectedDate = _selectedDate.add(
+                        const Duration(days: 1),
+                      );
                     });
                   },
                 ),
@@ -496,9 +644,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceLight.withOpacity(0.5)),
+              border: Border.all(
+                color: AppColors.surfaceLight.withOpacity(0.5),
+              ),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 5)),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
               ],
             ),
             child: Row(
@@ -509,7 +663,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   children: [
                     const Text(
                       "Today's Bookings",
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -524,33 +682,53 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
                 if (dayBookings.any((b) => b.status == 'CONFLICT'))
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                      border: Border.all(
+                        color: AppColors.error.withOpacity(0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 16),
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppColors.error,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           "${dayBookings.where((b) => b.status == 'CONFLICT').length} conflict${dayBookings.where((b) => b.status == 'CONFLICT').length > 1 ? 's' : ''}",
-                          style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
                       "No conflicts",
-                      style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
               ],
@@ -584,12 +762,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               padding: const EdgeInsets.all(48.0),
               child: Column(
                 children: [
-                  Icon(Icons.precision_manufacturing_outlined, size: 48, color: AppColors.textSecondary.withOpacity(0.3)),
+                  Icon(
+                    Icons.precision_manufacturing_outlined,
+                    size: 48,
+                    color: AppColors.textSecondary.withOpacity(0.3),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     "No machines registered yet.\nGo to Machines to add one.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary.withOpacity(0.7), fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                      color: AppColors.textSecondary.withOpacity(0.7),
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
@@ -638,17 +823,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildMachineTimelineRow(Machine machine) {
     final machineBookings = _bookings
-        .where((b) => b.machineId == machine.id &&
-            b.startTime.year == _selectedDate.year &&
-            b.startTime.month == _selectedDate.month &&
-            b.startTime.day == _selectedDate.day)
+        .where(
+          (b) =>
+              b.machineId == machine.id &&
+              b.startTime.year == _selectedDate.year &&
+              b.startTime.month == _selectedDate.month &&
+              b.startTime.day == _selectedDate.day,
+        )
         .toList();
 
     return Container(
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5))),
+        border: Border(
+          bottom: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+        ),
       ),
       child: Row(
         children: [
@@ -660,18 +850,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               children: [
                 Text(
                   machine.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: machine.status == 'ACTIVE'
                         ? AppColors.success.withOpacity(0.15)
                         : machine.status == 'IDLE'
-                            ? AppColors.warning.withOpacity(0.15)
-                            : AppColors.error.withOpacity(0.15),
+                        ? AppColors.warning.withOpacity(0.15)
+                        : AppColors.error.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -682,8 +878,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       color: machine.status == 'ACTIVE'
                           ? AppColors.success
                           : machine.status == 'IDLE'
-                              ? AppColors.warning
-                              : AppColors.error,
+                          ? AppColors.warning
+                          : AppColors.error,
                     ),
                   ),
                 ),
@@ -699,7 +895,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border(
-                            left: BorderSide(color: AppColors.surfaceLight.withOpacity(0.2)),
+                            left: BorderSide(
+                              color: AppColors.surfaceLight.withOpacity(0.2),
+                            ),
                           ),
                         ),
                       ),
@@ -757,9 +955,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 color: color.withOpacity(isConflict ? 0.95 : 0.85),
                 borderRadius: BorderRadius.circular(8),
                 border: isConflict
-                    ? Border.all(color: Colors.white.withOpacity(0.4), width: 1.5)
+                    ? Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                        width: 1.5,
+                      )
                     : null,
-                boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 8)],
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.4), blurRadius: 8),
+                ],
               ),
               child: Stack(
                 children: [
@@ -770,22 +973,40 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       if (isConflict)
                         const Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 10),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.white,
+                              size: 10,
+                            ),
                             SizedBox(width: 3),
-                            Text('CONFLICT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 9)),
+                            Text(
+                              'CONFLICT',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 9,
+                              ),
+                            ),
                           ],
                         ),
                       Text(
                         booking.jobTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
                       Text(
                         "${booking.durationHours}h • ${booking.userName}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
                       ),
                     ],
                   ),
@@ -802,7 +1023,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             color: Colors.white24,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close, color: Colors.white, size: 11),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 11,
+                          ),
                         ),
                       ),
                     ),
@@ -820,7 +1045,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          const Icon(Icons.lightbulb_outline, color: AppColors.warning, size: 16),
+          const Icon(
+            Icons.lightbulb_outline,
+            color: AppColors.warning,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           const Text(
             "Click \"New Booking\" to schedule a machine",
@@ -841,10 +1070,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
       ],
     );
   }

@@ -8,18 +8,20 @@ class MobileApiService {
 
   Future<List<WorkerTask>> fetchTasks(String resourceId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/tasks?resource_id=$resourceId'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/tasks?resource_id=$resourceId'),
+      );
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        
+
         List<dynamic> tasksList = [];
         if (decoded is Map<String, dynamic> && decoded.containsKey('tasks')) {
           tasksList = decoded['tasks'];
         } else if (decoded is List) {
           tasksList = decoded;
         }
-        
+
         return tasksList.map((json) => WorkerTask.fromJson(json)).toList();
       } else {
         throw Exception('Failed to load tasks. Status: ${response.statusCode}');

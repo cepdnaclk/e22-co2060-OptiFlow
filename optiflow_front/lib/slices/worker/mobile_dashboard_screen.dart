@@ -17,14 +17,16 @@ class _MobileDashboardScreenState extends State<MobileDashboardScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       WorkerHomeTab(resourceId: widget.resourceId),
-      const Center(child: Text("Profile Settings (Coming Soon)", style: TextStyle(color: Colors.grey))),
+      const Center(
+        child: Text(
+          "Profile Settings (Coming Soon)",
+          style: TextStyle(color: Colors.grey),
+        ),
+      ),
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -50,7 +52,10 @@ class _MobileDashboardScreenState extends State<MobileDashboardScreen> {
             showSelectedLabels: true,
             showUnselectedLabels: false,
             elevation: 0,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            selectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
             items: const [
               BottomNavigationBarItem(
                 icon: Padding(

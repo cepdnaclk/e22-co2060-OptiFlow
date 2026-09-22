@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 /// Represents a task assigned to a factory worker.
 class TaskModel {
   final String id;
-  final String status;           // SCHEDULED | IN_PROGRESS | COMPLETED
+  final String status; // SCHEDULED | IN_PROGRESS | COMPLETED
   final String jobTitle;
   final String operationTypeId;
   final String resourceName;
@@ -32,7 +32,8 @@ class TaskModel {
       status: json['status'] ?? 'SCHEDULED',
       jobTitle: json['jobs']?['title'] ?? json['job_title'] ?? 'Untitled Job',
       operationTypeId: json['operation_type_id']?.toString() ?? 'Operation',
-      resourceName: json['resources']?['name'] ?? json['resource_name'] ?? 'Machine',
+      resourceName:
+          json['resources']?['name'] ?? json['resource_name'] ?? 'Machine',
       quantityToProcess: json['quantity_to_process'] ?? 0,
       scheduledStart: parsedTime,
     );

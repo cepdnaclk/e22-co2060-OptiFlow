@@ -28,8 +28,8 @@ class _LiveAlertsState extends State<LiveAlerts> {
     if (mounted) {
       setState(() {
         _offlineMachines = (stats['offline_machines'] as List?) ?? [];
-        _overdueJobs     = (stats['overdue_jobs']     as List?) ?? [];
-        _isLoading       = false;
+        _overdueJobs = (stats['overdue_jobs'] as List?) ?? [];
+        _isLoading = false;
       });
     }
   }
@@ -44,8 +44,7 @@ class _LiveAlertsState extends State<LiveAlerts> {
       iconColor: _alertCount > 0 ? AppColors.matteRed : AppColors.matteGreen,
       trailing: _alertCount > 0
           ? Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppColors.matteRed.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
@@ -54,9 +53,10 @@ class _LiveAlertsState extends State<LiveAlerts> {
               child: Text(
                 '$_alertCount',
                 style: const TextStyle(
-                    color: AppColors.matteRed,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12),
+                  color: AppColors.matteRed,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
             )
           : null,
@@ -65,36 +65,38 @@ class _LiveAlertsState extends State<LiveAlerts> {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: CircularProgressIndicator(
-                    color: AppColors.primary, strokeWidth: 2),
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
               ),
             )
           : _alertCount == 0
-              ? _AlertRow(
-                  icon: Icons.check_circle_outline_rounded,
-                  title: 'All Clear',
-                  subtitle: 'No active alerts.',
-                  color: AppColors.matteGreen,
-                )
-              : Column(
-                  children: [
-                    ..._offlineMachines.map(
-                      (m) => _AlertRow(
-                        icon: Icons.power_off_rounded,
-                        title: m['name'] as String? ?? 'Machine',
-                        subtitle: 'OFFLINE — requires attention',
-                        color: AppColors.matteRed,
-                      ),
-                    ),
-                    ..._overdueJobs.map(
-                      (j) => _AlertRow(
-                        icon: Icons.schedule_rounded,
-                        title: j['title'] as String? ?? 'Job',
-                        subtitle: 'Deadline exceeded',
-                        color: AppColors.matteAmber,
-                      ),
-                    ),
-                  ],
+          ? _AlertRow(
+              icon: Icons.check_circle_outline_rounded,
+              title: 'All Clear',
+              subtitle: 'No active alerts.',
+              color: AppColors.matteGreen,
+            )
+          : Column(
+              children: [
+                ..._offlineMachines.map(
+                  (m) => _AlertRow(
+                    icon: Icons.power_off_rounded,
+                    title: m['name'] as String? ?? 'Machine',
+                    subtitle: 'OFFLINE — requires attention',
+                    color: AppColors.matteRed,
+                  ),
                 ),
+                ..._overdueJobs.map(
+                  (j) => _AlertRow(
+                    icon: Icons.schedule_rounded,
+                    title: j['title'] as String? ?? 'Job',
+                    subtitle: 'Deadline exceeded',
+                    color: AppColors.matteAmber,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -112,7 +114,7 @@ class RecentActivity extends StatefulWidget {
 class _RecentActivityState extends State<RecentActivity> {
   bool _isLoading = true;
   List<dynamic> _recentTasks = [];
-  List<dynamic> _newJobs     = [];
+  List<dynamic> _newJobs = [];
 
   @override
   void initState() {
@@ -125,8 +127,8 @@ class _RecentActivityState extends State<RecentActivity> {
     if (mounted) {
       setState(() {
         _recentTasks = (stats['recent_tasks'] as List?) ?? [];
-        _newJobs     = (stats['new_jobs']     as List?) ?? [];
-        _isLoading   = false;
+        _newJobs = (stats['new_jobs'] as List?) ?? [];
+        _isLoading = false;
       });
     }
   }
@@ -142,48 +144,51 @@ class _RecentActivityState extends State<RecentActivity> {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: CircularProgressIndicator(
-                    color: AppColors.primary, strokeWidth: 2),
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
               ),
             )
           : (_recentTasks.isEmpty && _newJobs.isEmpty)
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'No recent activity.',
-                      style: TextStyle(
-                          color: AppColors.textMuted.withOpacity(0.7),
-                          fontStyle: FontStyle.italic),
-                    ),
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'No recent activity.',
+                  style: TextStyle(
+                    color: AppColors.textMuted.withOpacity(0.7),
+                    fontStyle: FontStyle.italic,
                   ),
-                )
-              : Column(
-                  children: [
-                    ..._recentTasks.map((t) {
-                      final jobTitle =
-                          t['jobs']?['title'] as String? ?? 'Job';
-                      final resource =
-                          t['resources']?['name'] as String? ?? 'Resource';
-                      return _FeedRow(
-                        color: AppColors.matteGreen,
-                        title: t['name'] as String? ?? 'Task',
-                        subtitle: '$jobTitle · $resource',
-                        tag: 'COMPLETED',
-                        tagColor: AppColors.matteGreen,
-                        time: _timeAgo(t['completed_at']),
-                      );
-                    }),
-                    ..._newJobs.map((j) => _FeedRow(
-                          color: AppColors.matteBlue,
-                          title: j['title'] as String? ?? 'Job',
-                          subtitle:
-                              'Status: ${j['status'] as String? ?? 'DRAFT'}',
-                          tag: 'NEW JOB',
-                          tagColor: AppColors.matteBlue,
-                          time: _timeAgo(j['created_at']),
-                        )),
-                  ],
                 ),
+              ),
+            )
+          : Column(
+              children: [
+                ..._recentTasks.map((t) {
+                  final jobTitle = t['jobs']?['title'] as String? ?? 'Job';
+                  final resource =
+                      t['resources']?['name'] as String? ?? 'Resource';
+                  return _FeedRow(
+                    color: AppColors.matteGreen,
+                    title: t['name'] as String? ?? 'Task',
+                    subtitle: '$jobTitle · $resource',
+                    tag: 'COMPLETED',
+                    tagColor: AppColors.matteGreen,
+                    time: _timeAgo(t['completed_at']),
+                  );
+                }),
+                ..._newJobs.map(
+                  (j) => _FeedRow(
+                    color: AppColors.matteBlue,
+                    title: j['title'] as String? ?? 'Job',
+                    subtitle: 'Status: ${j['status'] as String? ?? 'DRAFT'}',
+                    tag: 'NEW JOB',
+                    tagColor: AppColors.matteBlue,
+                    time: _timeAgo(j['created_at']),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -192,7 +197,7 @@ class _RecentActivityState extends State<RecentActivity> {
     try {
       final diff = DateTime.now().difference(DateTime.parse(iso).toLocal());
       if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-      if (diff.inHours < 24)  return '${diff.inHours}h ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
       return '${diff.inDays}d ago';
     } catch (_) {
       return '—';
@@ -250,10 +255,7 @@ class _CommandCard extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              if (trailing != null) ...[
-                const Spacer(),
-                trailing!,
-              ],
+              if (trailing != null) ...[const Spacer(), trailing!],
             ],
           ),
           const SizedBox(height: 16),
@@ -300,14 +302,21 @@ class _AlertRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 11)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
@@ -350,10 +359,7 @@ class _FeedRow extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
             ],
           ),
@@ -379,12 +385,13 @@ class _FeedRow extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: tagColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                            color: tagColor.withOpacity(0.25)),
+                        border: Border.all(color: tagColor.withOpacity(0.25)),
                       ),
                       child: Text(
                         tag,
@@ -406,7 +413,9 @@ class _FeedRow extends StatelessWidget {
                       child: Text(
                         subtitle,
                         style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 11),
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -414,7 +423,9 @@ class _FeedRow extends StatelessWidget {
                     Text(
                       time,
                       style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11),
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),

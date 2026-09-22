@@ -43,7 +43,7 @@ class _StatCardState extends State<StatCard> {
 
     return MouseRegion(
       onEnter: (_) => _onHover(true),
-      onExit:  (_) => _onHover(false),
+      onExit: (_) => _onHover(false),
       cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -101,7 +101,9 @@ class _StatCardState extends State<StatCard> {
                 if (widget.percentage != 0) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: trendColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),

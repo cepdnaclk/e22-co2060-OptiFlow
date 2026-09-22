@@ -62,7 +62,9 @@ class ApiService {
   // ==========================================
   Future<List<dynamic>> getTasksForResource(String resourceId) async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/tasks?resource_id=$resourceId"));
+      final response = await http.get(
+        Uri.parse("$baseUrl/tasks?resource_id=$resourceId"),
+      );
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -152,19 +154,25 @@ class ApiService {
           // Use minutes for better resolution; Gantt renders in hours but
           // ensure at least 1 hour block so tiny tasks are still visible.
           final durationMinutes = endTime.difference(startTime).inMinutes;
-          final durationHours   = (durationMinutes / 60).ceil().clamp(1, 24);
+          final durationHours = (durationMinutes / 60).ceil().clamp(1, 24);
 
-          bookings.add(Booking(
-            id:           item['id']?.toString() ?? '',
-            machineId:    resourceId,
-            machineName:  item['resources']?['name']?.toString() ?? 'Unknown Resource',
-            jobTitle:     item['jobs']?['title']?.toString() ?? item['name']?.toString() ?? 'Unknown Job',
-            userName:     'System',
-            startTime:    startTime,
-            durationHours: durationHours,
-            priority:     'Medium',
-            status:       item['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
-          ));
+          bookings.add(
+            Booking(
+              id: item['id']?.toString() ?? '',
+              machineId: resourceId,
+              machineName:
+                  item['resources']?['name']?.toString() ?? 'Unknown Resource',
+              jobTitle:
+                  item['jobs']?['title']?.toString() ??
+                  item['name']?.toString() ??
+                  'Unknown Job',
+              userName: 'System',
+              startTime: startTime,
+              durationHours: durationHours,
+              priority: 'Medium',
+              status: item['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
+            ),
+          );
         }
         return bookings;
       } else {
@@ -175,7 +183,6 @@ class ApiService {
       return [];
     }
   }
-
 
   Future<List<Map<String, dynamic>>> fetchHumanResources() async {
     try {
@@ -230,7 +237,9 @@ class ApiService {
 
   Future<List<Job>> fetchJobsFiltered(int days) async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/analytics-jobs?days=$days"));
+      final response = await http.get(
+        Uri.parse("$baseUrl/analytics-jobs?days=$days"),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((j) => Job.fromJson(j)).toList();

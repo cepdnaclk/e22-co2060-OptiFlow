@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../models/task_model.dart';
 
-/// Airbnb-style task card used in both the carousel (IN_PROGRESS) 
+/// Airbnb-style task card used in both the carousel (IN_PROGRESS)
 /// and the vertical list (SCHEDULED).
 class TaskCard extends StatelessWidget {
   final TaskModel task;
@@ -18,10 +18,14 @@ class TaskCard extends StatelessWidget {
 
   Color get _accentColor {
     switch (task.status) {
-      case 'IN_PROGRESS': return AppColors.inProgress;
-      case 'SCHEDULED':   return AppColors.scheduled;
-      case 'COMPLETED':   return AppColors.completed;
-      default:            return AppColors.textDisabled;
+      case 'IN_PROGRESS':
+        return AppColors.inProgress;
+      case 'SCHEDULED':
+        return AppColors.scheduled;
+      case 'COMPLETED':
+        return AppColors.completed;
+      default:
+        return AppColors.textDisabled;
     }
   }
 

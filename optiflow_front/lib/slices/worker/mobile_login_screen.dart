@@ -12,9 +12,21 @@ class MobileLoginScreen extends StatefulWidget {
 class _MobileLoginScreenState extends State<MobileLoginScreen> {
   // Hardcoded resources for demo purposes
   final List<Map<String, String>> _resources = [
-    {'id': '1e9d1f7e-1234-4a5b-8c6d-9e8f7a6b5c4d', 'name': 'Machine Operator A', 'role': 'Folding'},
-    {'id': '2f8e2a6d-2345-5b6c-9d7e-0f1e2a3b4c5d', 'name': 'Printer B', 'role': 'Printing'},
-    {'id': '3a7d3b5c-3456-6c7d-0e8f-1f2e3a4b5c6e', 'name': 'Cutter C', 'role': 'Cutting'},
+    {
+      'id': '1e9d1f7e-1234-4a5b-8c6d-9e8f7a6b5c4d',
+      'name': 'Machine Operator A',
+      'role': 'Folding',
+    },
+    {
+      'id': '2f8e2a6d-2345-5b6c-9d7e-0f1e2a3b4c5d',
+      'name': 'Printer B',
+      'role': 'Printing',
+    },
+    {
+      'id': '3a7d3b5c-3456-6c7d-0e8f-1f2e3a4b5c6e',
+      'name': 'Cutter C',
+      'role': 'Cutting',
+    },
   ];
 
   void _selectResource(String resourceId) {
@@ -22,12 +34,16 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => MobileDashboardScreen(resourceId: resourceId),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            MobileDashboardScreen(resourceId: resourceId),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutQuart;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
           var offsetAnimation = animation.drive(tween);
           return SlideTransition(position: offsetAnimation, child: child);
         },
@@ -54,7 +70,11 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
                     color: const Color(0xFF2B2B2B),
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Icon(Icons.layers_rounded, color: Colors.white, size: 40),
+                  child: const Icon(
+                    Icons.layers_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -81,7 +101,8 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
               Expanded(
                 child: ListView.separated(
                   itemCount: _resources.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final resource = _resources[index];
                     return _buildResourceCard(
@@ -99,7 +120,11 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
     );
   }
 
-  Widget _buildResourceCard({required String name, required String role, required VoidCallback onTap}) {
+  Widget _buildResourceCard({
+    required String name,
+    required String role,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -123,7 +148,10 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
                 color: const Color(0xFFF7F7F9),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.precision_manufacturing_rounded, color: Color(0xFF2B2B2B)),
+              child: const Icon(
+                Icons.precision_manufacturing_rounded,
+                color: Color(0xFF2B2B2B),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -150,7 +178,11 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey,
+            ),
           ],
         ),
       ),

@@ -34,7 +34,8 @@ class WorkerTask {
       quantityToProcess: json['quantity_to_process'] ?? 0,
       jobTitle: json['jobs']?['title'] ?? json['job_title'] ?? 'Unknown Job',
       resourceName: json['resources']?['name'] ?? 'Unknown Resource',
-      operationTypeId: json['operation_type_id']?.toString() ?? 'Unknown Operation',
+      operationTypeId:
+          json['operation_type_id']?.toString() ?? 'Unknown Operation',
     );
   }
 }

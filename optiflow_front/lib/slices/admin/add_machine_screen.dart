@@ -74,7 +74,10 @@ class _AddMachineScreenState extends State<AddMachineScreen> {
       appBar: AppBar(
         title: const Text(
           "Add New Machine",
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,
@@ -112,12 +115,19 @@ class _AddMachineScreenState extends State<AddMachineScreen> {
                       controller: _nameController,
                       decoration: InputDecoration(
                         labelText: "Machine Name",
-                        labelStyle: const TextStyle(color: AppColors.textSecondary),
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
                         hintText: "e.g. Ultimaker S5 #3",
-                        hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                        hintStyle: TextStyle(
+                          color: AppColors.textSecondary.withOpacity(0.5),
+                        ),
                         filled: true,
                         fillColor: AppColors.surfaceLight.withOpacity(0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                       style: const TextStyle(color: AppColors.textPrimary),
                       validator: (value) =>
@@ -130,10 +140,15 @@ class _AddMachineScreenState extends State<AddMachineScreen> {
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         labelText: "Machine Type",
-                        labelStyle: const TextStyle(color: AppColors.textSecondary),
+                        labelStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
                         filled: true,
                         fillColor: AppColors.surfaceLight.withOpacity(0.3),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                       items: _machineTypes.map((type) {
                         return DropdownMenuItem(value: type, child: Text(type));

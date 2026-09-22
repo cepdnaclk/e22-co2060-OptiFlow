@@ -7,11 +7,7 @@ class TaskCard extends StatelessWidget {
   final WorkerTask task;
   final VoidCallback onTaskUpdated;
 
-  const TaskCard({
-    super.key,
-    required this.task,
-    required this.onTaskUpdated,
-  });
+  const TaskCard({super.key, required this.task, required this.onTaskUpdated});
 
   String _formatTime(DateTime? dt) {
     if (dt == null) return 'Not Scheduled';
@@ -36,10 +32,8 @@ class TaskCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => TaskBottomSheet(
-        task: task,
-        onTaskUpdated: onTaskUpdated,
-      ),
+      builder: (context) =>
+          TaskBottomSheet(task: task, onTaskUpdated: onTaskUpdated),
     );
   }
 
@@ -47,7 +41,7 @@ class TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor();
     final isHorizontal = task.status == 'IN_PROGRESS';
-    
+
     return GestureDetector(
       onTap: () => _showBottomSheet(context),
       child: Container(
@@ -76,7 +70,10 @@ class TaskCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -109,7 +106,11 @@ class TaskCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.precision_manufacturing_outlined, size: 16, color: Colors.grey[500]),
+                Icon(
+                  Icons.precision_manufacturing_outlined,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
                 const SizedBox(width: 8),
                 Text(
                   task.operationTypeId,
@@ -126,7 +127,11 @@ class TaskCard extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.access_time_rounded, size: 16, color: Colors.grey[500]),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _formatTime(task.scheduledStartTime),

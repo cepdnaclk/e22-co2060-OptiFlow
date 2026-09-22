@@ -2,7 +2,7 @@
 class MachineModel {
   final String id;
   final String name;
-  final String status;  // "Active" | "OFFLINE" | etc.
+  final String status; // "Active" | "OFFLINE" | etc.
   final String? imageUrl;
   final double? pricePerHour;
 
@@ -25,5 +25,6 @@ class MachineModel {
   }
 
   bool get isOnline =>
-      status.toLowerCase() != 'offline' && status.toLowerCase() != 'maintenance';
+      status.toLowerCase() != 'offline' &&
+      status.toLowerCase() != 'maintenance';
 }

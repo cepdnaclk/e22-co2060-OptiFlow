@@ -20,13 +20,13 @@ class _SidebarState extends State<Sidebar> {
 
   // (index, icon, label, sectionHeader)
   static const _navItems = [
-    (0,  Icons.dashboard_rounded,               'Dashboard',  'OVERVIEW'),
-    (5,  Icons.analytics_rounded,               'Analytics',  null),
-    (1,  Icons.precision_manufacturing_rounded,  'Machines',   'OPERATIONS'),
-    (3,  Icons.inventory_2_rounded,             'Jobs',       null),
-    (2,  Icons.calendar_month_rounded,          'Schedule',   null),
-    (4,  Icons.people_rounded,                  'Team',       'ADMIN'),
-    (6,  Icons.settings_rounded,               'Settings',   null),
+    (0, Icons.dashboard_rounded, 'Dashboard', 'OVERVIEW'),
+    (5, Icons.analytics_rounded, 'Analytics', null),
+    (1, Icons.precision_manufacturing_rounded, 'Machines', 'OPERATIONS'),
+    (3, Icons.inventory_2_rounded, 'Jobs', null),
+    (2, Icons.calendar_month_rounded, 'Schedule', null),
+    (4, Icons.people_rounded, 'Team', 'ADMIN'),
+    (6, Icons.settings_rounded, 'Settings', null),
   ];
 
   @override
@@ -53,7 +53,11 @@ class _SidebarState extends State<Sidebar> {
                   children: [
                     if (item.$4 != null)
                       Padding(
-                        padding: const EdgeInsets.only(left: 24, top: 20, bottom: 8),
+                        padding: const EdgeInsets.only(
+                          left: 24,
+                          top: 20,
+                          bottom: 8,
+                        ),
                         child: Text(
                           item.$4!,
                           style: const TextStyle(
@@ -91,10 +95,7 @@ class _SidebarState extends State<Sidebar> {
             ),
             clipBehavior: Clip.hardEdge,
             padding: const EdgeInsets.all(4),
-            child: Image.asset(
-              'assets/images/logo.png',
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
           ),
           const SizedBox(width: 12),
           const Text(
@@ -113,13 +114,13 @@ class _SidebarState extends State<Sidebar> {
 
   Widget _buildNavItem(int index, IconData icon, String title) {
     final isSelected = widget.selectedIndex == index;
-    final isHovered  = _hoveredIndex == index;
+    final isHovered = _hoveredIndex == index;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: MouseRegion(
         onEnter: (_) => setState(() => _hoveredIndex = index),
-        onExit:  (_) => setState(() => _hoveredIndex = null),
+        onExit: (_) => setState(() => _hoveredIndex = null),
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () => widget.onItemSelected(index),
@@ -131,8 +132,8 @@ class _SidebarState extends State<Sidebar> {
               color: isSelected
                   ? AppColors.surfaceLight
                   : isHovered
-                      ? AppColors.surfaceLight.withOpacity(0.5)
-                      : Colors.transparent,
+                  ? AppColors.surfaceLight.withOpacity(0.5)
+                  : Colors.transparent,
             ),
             child: Row(
               children: [
@@ -142,8 +143,8 @@ class _SidebarState extends State<Sidebar> {
                   color: isSelected
                       ? AppColors.textPrimary
                       : isHovered
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -154,8 +155,8 @@ class _SidebarState extends State<Sidebar> {
                     color: isSelected
                         ? AppColors.textPrimary
                         : isHovered
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -214,7 +215,11 @@ class _SidebarState extends State<Sidebar> {
               color: AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 18),
+            child: const Icon(
+              Icons.person_rounded,
+              color: AppColors.textSecondary,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 10),
           const Expanded(
@@ -233,7 +238,10 @@ class _SidebarState extends State<Sidebar> {
                 ),
                 Text(
                   'Factory Manager',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

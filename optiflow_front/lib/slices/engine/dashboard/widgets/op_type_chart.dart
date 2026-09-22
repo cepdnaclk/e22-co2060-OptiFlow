@@ -30,7 +30,9 @@ class _OpTypeChartState extends State<OpTypeChart>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        duration: const Duration(milliseconds: 1000), vsync: this);
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
     _ctrl.forward();
   }
@@ -71,8 +73,11 @@ class _OpTypeChartState extends State<OpTypeChart>
                       color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.bar_chart_rounded,
-                        color: AppColors.primary, size: 16),
+                    child: const Icon(
+                      Icons.bar_chart_rounded,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   const Text(
@@ -86,13 +91,16 @@ class _OpTypeChartState extends State<OpTypeChart>
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: AppColors.primary.withOpacity(0.25)),
+                    color: AppColors.primary.withOpacity(0.25),
+                  ),
                 ),
                 child: Text(
                   '$total tasks',
@@ -112,17 +120,20 @@ class _OpTypeChartState extends State<OpTypeChart>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.bar_chart_rounded,
-                        size: 40,
-                        color: AppColors.textMuted.withOpacity(0.5)),
+                    Icon(
+                      Icons.bar_chart_rounded,
+                      size: 40,
+                      color: AppColors.textMuted.withOpacity(0.5),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       'No task data yet.\nCreate jobs to see distribution.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic),
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                 ),
@@ -169,46 +180,50 @@ class _OpTypeChartState extends State<OpTypeChart>
             Text(
               label.length > 18 ? '${label.substring(0, 16)}…' : label,
               style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500),
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             Text(
               '$value',
               style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700),
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        LayoutBuilder(builder: (ctx, constraints) {
-          final maxW = constraints.maxWidth;
-          final fillW = (maxW * pct).clamp(4.0, maxW);
-          return Stack(
-            children: [
-              // Track
-              Container(
-                height: 6,
-                width: maxW,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(3),
+        LayoutBuilder(
+          builder: (ctx, constraints) {
+            final maxW = constraints.maxWidth;
+            final fillW = (maxW * pct).clamp(4.0, maxW);
+            return Stack(
+              children: [
+                // Track
+                Container(
+                  height: 6,
+                  width: maxW,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
-              ),
-              // Fill
-              Container(
-                height: 6,
-                width: fillW,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(3),
+                // Fill
+                Container(
+                  height: 6,
+                  width: fillW,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
-              ),
-            ],
-          );
-        }),
+              ],
+            );
+          },
+        ),
         const SizedBox(height: 4),
       ],
     );

@@ -27,7 +27,8 @@ class MachineCard extends StatelessWidget {
             // ── Image / Icon area ─────────────────────────────────────────
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(AppTheme.radiusCard)),
+                top: Radius.circular(AppTheme.radiusCard),
+              ),
               child: Container(
                 height: 90,
                 color: const Color(0xFFF0F0F0),
@@ -85,7 +86,9 @@ class MachineCard extends StatelessWidget {
                     Text(
                       '\$${machine.pricePerHour!.toStringAsFixed(0)}/hr',
                       style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ],
@@ -102,7 +105,9 @@ class MachineCard extends StatelessWidget {
       child: Icon(
         Icons.precision_manufacturing_rounded,
         size: 40,
-        color: isOnline ? AppColors.textDisabled : AppColors.offline.withOpacity(0.4),
+        color: isOnline
+            ? AppColors.textDisabled
+            : AppColors.offline.withOpacity(0.4),
       ),
     );
   }
@@ -148,7 +153,12 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
     if (time == null || !mounted) return;
 
     final dt = DateTime(
-        date.year, date.month, date.day, time.hour, time.minute);
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     setState(() {
       if (isStart) {
         _startDt = dt;
@@ -165,17 +175,21 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
 
   Future<void> _book() async {
     if (_startDt == null || _endDt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please select both start and end times.'),
-        backgroundColor: AppColors.offline,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select both start and end times.'),
+          backgroundColor: AppColors.offline,
+        ),
+      );
       return;
     }
     if (_endDt!.isBefore(_startDt!)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('End time must be after start time.'),
-        backgroundColor: AppColors.offline,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('End time must be after start time.'),
+          backgroundColor: AppColors.offline,
+        ),
+      );
       return;
     }
     HapticFeedback.lightImpact();
@@ -190,23 +204,32 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
       if (mounted) {
         widget.onBookingDone();
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Machine booked! ✓',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Machine booked! ✓',
               style: TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600)),
-          backgroundColor: const Color(0xFF222222),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        ));
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFF222222),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+            ),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.offline,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.offline,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _booking = false);
@@ -218,10 +241,15 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusCard)),
-        title: const Text('Report Machine Issue',
-            style: TextStyle(
-                fontWeight: FontWeight.w800, color: AppColors.offline)),
+          borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        ),
+        title: const Text(
+          'Report Machine Issue',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.offline,
+          ),
+        ),
         content: Text(
           'This will mark "${widget.machine.name}" as OFFLINE '
           'and notify the maintenance team.',
@@ -237,7 +265,8 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
               backgroundColor: AppColors.offline,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: const Text('Report Offline'),
           ),
@@ -253,23 +282,32 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
       if (mounted) {
         widget.onBookingDone(); // Refresh machine list
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Machine reported as offline.',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Machine reported as offline.',
               style: TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600)),
-          backgroundColor: AppColors.offline,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        ));
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: AppColors.offline,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+            ),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: AppColors.offline,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.offline,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _reporting = false);
@@ -334,14 +372,19 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
               ),
               if (!m.isOnline)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.offline.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.warning_rounded,
-                      color: AppColors.offline, size: 24),
+                  child: const Icon(
+                    Icons.warning_rounded,
+                    color: AppColors.offline,
+                    size: 24,
+                  ),
                 ),
             ],
           ),
@@ -372,9 +415,13 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
               ),
               child: _booking
                   ? const SizedBox(
-                      width: 22, height: 22,
+                      width: 22,
+                      height: 22,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5))
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
                   : const Text('Reserve This Machine'),
             ),
           ),
@@ -384,13 +431,20 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
           Center(
             child: _reporting
                 ? const SizedBox(
-                    width: 22, height: 22,
+                    width: 22,
+                    height: 22,
                     child: CircularProgressIndicator(
-                        color: AppColors.offline, strokeWidth: 2.5))
+                      color: AppColors.offline,
+                      strokeWidth: 2.5,
+                    ),
+                  )
                 : TextButton.icon(
                     onPressed: _reportIssue,
-                    icon: const Icon(Icons.warning_amber_rounded,
-                        color: AppColors.offline, size: 18),
+                    icon: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.offline,
+                      size: 18,
+                    ),
                     label: const Text(
                       'Report Machine Issue',
                       style: TextStyle(
@@ -421,28 +475,39 @@ class _MachineBookingSheetState extends State<MachineBookingSheet> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.schedule_rounded,
-                color: AppColors.textDisabled, size: 20),
+            const Icon(
+              Icons.schedule_rounded,
+              color: AppColors.textDisabled,
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textDisabled,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textDisabled,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
             const Spacer(),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textDisabled),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textDisabled,
+            ),
           ],
         ),
       ),

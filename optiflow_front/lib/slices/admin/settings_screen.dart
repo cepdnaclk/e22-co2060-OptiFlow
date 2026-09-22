@@ -24,7 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     "Notifications",
     "Security",
     "Preferences",
-    "Operations",  // Skills Matrix — real Supabase data
+    "Operations", // Skills Matrix — real Supabase data
   ];
 
   List<Map<String, dynamic>> _capabilities = [];
@@ -40,7 +40,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _fetchCapabilities() async {
     if (!_capsLoading) return; // Already loaded
     final caps = await SupabaseService.instance.fetchCapabilities();
-    if (mounted) setState(() { _capabilities = caps; _capsLoading = false; });
+    if (mounted)
+      setState(() {
+        _capabilities = caps;
+        _capsLoading = false;
+      });
   }
 
   Future<void> _fetchProfile() async {
@@ -50,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final user = resources.first; // Mock logged-in user as the first human
         final name = user['name']?.toString() ?? "Admin User";
         final email = "${name.toLowerCase().replaceAll(' ', '.')}@optiflow.com";
-        
+
         if (mounted) {
           setState(() {
             _userName = name;
@@ -87,9 +91,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
-    
+
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
@@ -102,7 +108,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.surfaceLight.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppColors.surfaceLight.withOpacity(0.3),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.15),
@@ -186,7 +194,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Content Area
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(20)),
+                      borderRadius: const BorderRadius.horizontal(
+                        right: Radius.circular(20),
+                      ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(40.0),
                         child: _buildTabContent(),
@@ -219,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Text(
           "Manage your account settings, notifications, and security.",
           style: TextStyle(
-            fontSize: 16, 
+            fontSize: 16,
             color: AppColors.textSecondary.withOpacity(0.8),
             fontWeight: FontWeight.w500,
           ),
@@ -230,12 +240,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildTabContent() {
     switch (_selectedTabIndex) {
-      case 0: return _buildProfileTab();
-      case 1: return _buildNotificationsTab();
-      case 2: return _buildSecurityTab();
-      case 3: return _buildPreferencesTab();
-      case 4: return _buildOperationsTab();
-      default: return _buildProfileTab();
+      case 0:
+        return _buildProfileTab();
+      case 1:
+        return _buildNotificationsTab();
+      case 2:
+        return _buildSecurityTab();
+      case 3:
+        return _buildPreferencesTab();
+      case 4:
+        return _buildOperationsTab();
+      default:
+        return _buildProfileTab();
     }
   }
 
@@ -255,10 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           "Update your photo and personal details here.",
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
         Row(
@@ -277,11 +290,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: CircleAvatar(
                 radius: 40,
                 backgroundColor: AppColors.primary,
-                child: const Icon(
-                  Icons.person,
-                  size: 40,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.person, size: 40, color: Colors.white),
               ),
             ),
             const SizedBox(width: 24),
@@ -291,37 +300,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 backgroundColor: AppColors.surfaceLight,
                 foregroundColor: AppColors.textPrimary,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: AppColors.textSecondary.withOpacity(0.2)),
+                  side: BorderSide(
+                    color: AppColors.textSecondary.withOpacity(0.2),
+                  ),
                 ),
               ),
-              child: const Text("Change Avatar", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Change Avatar",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(width: 16),
             TextButton(
               onPressed: () {},
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              child: const Text(
+                "Remove",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              child: const Text("Remove", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
         const SizedBox(height: 48),
         _buildTextField("Full Name", _userName, controller: _nameController),
         const SizedBox(height: 24),
-        _buildTextField("Email Address", _userEmail, controller: _emailController),
+        _buildTextField(
+          "Email Address",
+          _userEmail,
+          controller: _emailController,
+        ),
         const SizedBox(height: 24),
         _buildTextField("Role", "Administrator", enabled: false),
         const SizedBox(height: 48),
-        Row(
-          children: [
-            const Spacer(),
-            _buildSaveButton(),
-          ],
-        ),
+        Row(children: [const Spacer(), _buildSaveButton()]),
       ],
     );
   }
@@ -342,23 +359,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           "Choose what we should notify you about.",
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
-        _buildSwitchTile("Email Notifications", "Receive updates via email", true),
-        _buildSwitchTile("Push Notifications", "Receive alerts on desktop", true),
-        _buildSwitchTile("Weekly Reports", "Get a summary of weekly stats", false),
-        _buildSwitchTile("Machine Alerts", "Notify when a machine goes offline", true),
-        const SizedBox(height: 48),
-        Row(
-          children: [
-            const Spacer(),
-            _buildSaveButton(),
-          ],
+        _buildSwitchTile(
+          "Email Notifications",
+          "Receive updates via email",
+          true,
         ),
+        _buildSwitchTile(
+          "Push Notifications",
+          "Receive alerts on desktop",
+          true,
+        ),
+        _buildSwitchTile(
+          "Weekly Reports",
+          "Get a summary of weekly stats",
+          false,
+        ),
+        _buildSwitchTile(
+          "Machine Alerts",
+          "Notify when a machine goes offline",
+          true,
+        ),
+        const SizedBox(height: 48),
+        Row(children: [const Spacer(), _buildSaveButton()]),
       ],
     );
   }
@@ -379,10 +404,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           "Manage your password and security settings.",
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
         _buildTextField("Current Password", "********", obscureText: true),
@@ -391,12 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 24),
         _buildTextField("Confirm New Password", "", obscureText: true),
         const SizedBox(height: 48),
-        Row(
-          children: [
-            const Spacer(),
-            _buildSaveButton(),
-          ],
-        ),
+        Row(children: [const Spacer(), _buildSaveButton()]),
       ],
     );
   }
@@ -417,10 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         const Text(
           "Customize your experience.",
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 32),
         _buildDropdown("Language", ["English", "Spanish", "French"]),
@@ -429,12 +443,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 24),
         _buildDropdown("Theme", ["System Default", "Light", "Dark"]),
         const SizedBox(height: 48),
-        Row(
-          children: [
-            const Spacer(),
-            _buildSaveButton(),
-          ],
-        ),
+        Row(children: [const Spacer(), _buildSaveButton()]),
       ],
     );
   }
@@ -446,8 +455,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const Text(
           "Skills Matrix",
           style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary, letterSpacing: -0.5,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
@@ -457,7 +468,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
         if (_capsLoading)
-          const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          )
         else if (_capabilities.isEmpty)
           Center(
             child: Padding(
@@ -477,40 +490,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             child: const Row(
               children: [
-                Expanded(flex: 3, child: Text('Machine', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
-                Expanded(flex: 3, child: Text('Operation Type', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
-                Expanded(flex: 2, child: Text('Rate / hr', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
-                Expanded(flex: 2, child: Text('Setup (min)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
-                Expanded(flex: 2, child: Text('Cost / hr', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Machine',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Operation Type',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Rate / hr',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Setup (min)',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Cost / hr',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceLight.withOpacity(0.1),
-              border: Border.all(color: AppColors.surfaceLight.withOpacity(0.4)),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+              border: Border.all(
+                color: AppColors.surfaceLight.withOpacity(0.4),
+              ),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(12),
+              ),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _capabilities.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: AppColors.surfaceLight.withOpacity(0.4)),
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: AppColors.surfaceLight.withOpacity(0.4),
+              ),
               itemBuilder: (_, i) {
                 final cap = _capabilities[i];
-                final machineName = (cap['resources'] as Map?)?['name']?.toString() ?? '—';
-                final opName = (cap['operation_types'] as Map?)?['name']?.toString() ?? '—';
+                final machineName =
+                    (cap['resources'] as Map?)?['name']?.toString() ?? '—';
+                final opName =
+                    (cap['operation_types'] as Map?)?['name']?.toString() ??
+                    '—';
                 final rate = cap['processing_rate_per_hr'];
                 final setup = cap['setup_time_minutes'];
                 final cost = cap['cost_per_hour'];
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -518,7 +595,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Row(
                           children: [
                             Container(
-                              width: 8, height: 8,
+                              width: 8,
+                              height: 8,
                               margin: const EdgeInsets.only(right: 8),
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
@@ -529,7 +607,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Text(
                                 machineName,
                                 style: const TextStyle(
-                                  color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13,
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -540,7 +620,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Expanded(
                         flex: 3,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.secondary.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(6),
@@ -548,7 +631,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Text(
                             opName,
                             style: const TextStyle(
-                              color: AppColors.secondary, fontSize: 12, fontWeight: FontWeight.w600,
+                              color: AppColors.secondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -557,22 +642,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          rate != null ? '${rate.toStringAsFixed(0)} units' : '—',
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                          rate != null
+                              ? '${rate.toStringAsFixed(0)} units'
+                              : '—',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
                           setup != null ? '$setup min' : '—',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          cost != null ? '\$${cost.toStringAsFixed(2)}/hr' : '—',
-                          style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13),
+                          cost != null
+                              ? '\$${cost.toStringAsFixed(2)}/hr'
+                              : '—',
+                          style: const TextStyle(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -587,9 +686,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildTextField(
-    String label, 
+    String label,
     String hint, {
-    bool obscureText = false, 
+    bool obscureText = false,
     bool enabled = true,
     TextEditingController? controller,
   }) {
@@ -615,22 +714,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           decoration: InputDecoration(
             hintText: controller == null ? hint : null,
-            hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary.withOpacity(0.5),
+            ),
             filled: true,
-            fillColor: enabled ? AppColors.surfaceLight.withOpacity(0.3) : AppColors.surfaceLight.withOpacity(0.1),
+            fillColor: enabled
+                ? AppColors.surfaceLight.withOpacity(0.3)
+                : AppColors.surfaceLight.withOpacity(0.1),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.1), width: 1),
+              borderSide: BorderSide(
+                color: AppColors.textSecondary.withOpacity(0.1),
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],
@@ -704,17 +813,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: items[0],
               dropdownColor: AppColors.surfaceLight,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: AppColors.textSecondary,
+              ),
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
               items: items.map((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
+                return DropdownMenuItem<String>(value: item, child: Text(item));
               }).toList(),
               onChanged: (_) {},
             ),

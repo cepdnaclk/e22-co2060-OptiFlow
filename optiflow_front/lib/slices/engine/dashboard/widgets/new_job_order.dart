@@ -32,7 +32,8 @@ class NewJobOrder extends StatefulWidget {
 class _NewJobOrderState extends State<NewJobOrder> {
   final TextEditingController _jobNameController = TextEditingController();
   final TextEditingController _clientNameController = TextEditingController();
-  final TextEditingController _totalQuantityController = TextEditingController();
+  final TextEditingController _totalQuantityController =
+      TextEditingController();
   String _priority = 'Medium';
   DateTime? _deadline;
 
@@ -66,7 +67,9 @@ class _NewJobOrderState extends State<NewJobOrder> {
           id: 'T${_taskIdCounter++}',
           nameController: TextEditingController(),
           quantityController: TextEditingController(),
-          operationType: _operationTypes.isNotEmpty ? _operationTypes.first['id'] : null,
+          operationType: _operationTypes.isNotEmpty
+              ? _operationTypes.first['id']
+              : null,
           dependsOn: [],
         ),
       );
@@ -97,7 +100,8 @@ class _NewJobOrderState extends State<NewJobOrder> {
               onPrimary: Colors.white,
               surface: AppColors.surface,
               onSurface: AppColors.textPrimary,
-            ), dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
+            ),
+            dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
           ),
           child: child!,
         );
@@ -110,7 +114,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
     }
   }
 
-  Future<void> _showMultiSelect(BuildContext context, TaskItem currentTask) async {
+  Future<void> _showMultiSelect(
+    BuildContext context,
+    TaskItem currentTask,
+  ) async {
     int currentIndex = _tasks.indexOf(currentTask);
     List<TaskItem> availableTasks = _tasks.sublist(0, currentIndex);
 
@@ -133,11 +140,16 @@ class _NewJobOrderState extends State<NewJobOrder> {
               backgroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+                side: BorderSide(
+                  color: AppColors.surfaceLight.withOpacity(0.5),
+                ),
               ),
               title: const Text(
                 'Select Dependencies',
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SingleChildScrollView(
                 child: ListBody(
@@ -191,12 +203,17 @@ class _NewJobOrderState extends State<NewJobOrder> {
   Future<void> _submitOrder() async {
     if (_jobNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide a job name'), backgroundColor: AppColors.error),
+        const SnackBar(
+          content: Text('Please provide a job name'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
 
-    setState(() { _isSubmitting = true; });
+    setState(() {
+      _isSubmitting = true;
+    });
 
     List<Map<String, dynamic>> tasksData = [];
     for (int i = 0; i < _tasks.length; i++) {
@@ -207,25 +224,32 @@ class _NewJobOrderState extends State<NewJobOrder> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}" '
-                  'has no operation type selected. Please assign one before submitting.'),
+              content: Text(
+                'Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}" '
+                'has no operation type selected. Please assign one before submitting.',
+              ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 5),
             ),
           );
         }
-        setState(() { _isSubmitting = false; });
+        setState(() {
+          _isSubmitting = false;
+        });
         return;
       }
       tasksData.add({
-        'name': task.nameController.text.isNotEmpty ? task.nameController.text : "Task ${task.id}",
+        'name': task.nameController.text.isNotEmpty
+            ? task.nameController.text
+            : "Task ${task.id}",
         'operation_type_id': task.operationType,
-        'quantity_to_process': int.tryParse(task.quantityController.text) ??
-                               int.tryParse(_totalQuantityController.text) ?? 0,
+        'quantity_to_process':
+            int.tryParse(task.quantityController.text) ??
+            int.tryParse(_totalQuantityController.text) ??
+            0,
       });
     }
-
 
     List<Map<String, dynamic>> dependencies = [];
     for (int i = 0; i < _tasks.length; i++) {
@@ -244,10 +268,14 @@ class _NewJobOrderState extends State<NewJobOrder> {
 
     Map<String, dynamic> orderData = {
       "title": _jobNameController.text,
-      "client_name": _clientNameController.text.isEmpty ? "Unknown" : _clientNameController.text,
+      "client_name": _clientNameController.text.isEmpty
+          ? "Unknown"
+          : _clientNameController.text,
       "total_quantity": int.tryParse(_totalQuantityController.text) ?? 1,
-      "deadline": _deadline?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-      "created_by": null, 
+      "deadline":
+          _deadline?.toIso8601String() ??
+          DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+      "created_by": null,
       "tasks": tasksData,
       "dependencies": dependencies,
     };
@@ -297,7 +325,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
         );
       }
     } finally {
-      if (mounted) setState(() { _isSubmitting = false; });
+      if (mounted)
+        setState(() {
+          _isSubmitting = false;
+        });
     }
   }
 
@@ -385,7 +416,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 child: TextField(
                   controller: _jobNameController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Job Name', 'e.g., 500 Diaries'),
+                  decoration: _customInputDecoration(
+                    'Job Name',
+                    'e.g., 500 Diaries',
+                  ),
                 ),
               ),
               const SizedBox(width: 24),
@@ -394,7 +428,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 child: TextField(
                   controller: _clientNameController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Client Name', 'e.g., Acme Corp'),
+                  decoration: _customInputDecoration(
+                    'Client Name',
+                    'e.g., Acme Corp',
+                  ),
                 ),
               ),
             ],
@@ -409,7 +446,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                   controller: _totalQuantityController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Total Quantity', 'e.g., 500'),
+                  decoration: _customInputDecoration(
+                    'Total Quantity',
+                    'e.g., 500',
+                  ),
                 ),
               ),
               const SizedBox(width: 24),
@@ -419,8 +459,14 @@ class _NewJobOrderState extends State<NewJobOrder> {
                   initialValue: _priority,
                   decoration: _customInputDecoration('Priority', null),
                   dropdownColor: AppColors.surfaceLight,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.textSecondary,
+                  ),
                   items: ['High', 'Medium', 'Low'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -493,13 +539,18 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 icon: const Icon(Icons.add, color: Colors.white, size: 18),
                 label: const Text(
                   'Add Task',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.surfaceLight,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.8)),
+                    side: BorderSide(
+                      color: AppColors.surfaceLight.withOpacity(0.8),
+                    ),
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -520,7 +571,11 @@ class _NewJobOrderState extends State<NewJobOrder> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.account_tree_outlined, size: 48, color: AppColors.textSecondary.withOpacity(0.3)),
+                    Icon(
+                      Icons.account_tree_outlined,
+                      size: 48,
+                      color: AppColors.textSecondary.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'No tasks added yet. Click "Add Task" to begin.',
@@ -545,7 +600,9 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight.withOpacity(0.2),
-                  border: Border.all(color: AppColors.surfaceLight.withOpacity(0.4)),
+                  border: Border.all(
+                    color: AppColors.surfaceLight.withOpacity(0.4),
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -559,7 +616,9 @@ class _NewJobOrderState extends State<NewJobOrder> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.primary.withOpacity(0.2),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.5),
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -577,7 +636,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                       child: TextField(
                         controller: task.nameController,
                         style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: _customInputDecoration('Task Name', 'e.g., Print Cover'),
+                        decoration: _customInputDecoration(
+                          'Task Name',
+                          'e.g., Print Cover',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -593,27 +655,43 @@ class _NewJobOrderState extends State<NewJobOrder> {
                     const SizedBox(width: 16),
                     Expanded(
                       flex: 1,
-                      child: _isLoadingOps 
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: task.operationType,
-                        decoration: _customInputDecoration('Operation Type', null),
-                        dropdownColor: AppColors.surfaceLight,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                        items: _operationTypes.map((op) {
-                              return DropdownMenuItem<String>(
-                                value: op['id'].toString(),
-                                child: Text(op['name'].toString(), overflow: TextOverflow.ellipsis),
-                              );
-                            }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            task.operationType = newValue;
-                          });
-                        },
-                      ),
+                      child: _isLoadingOps
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : DropdownButtonFormField<String>(
+                              isExpanded: true,
+                              initialValue: task.operationType,
+                              decoration: _customInputDecoration(
+                                'Operation Type',
+                                null,
+                              ),
+                              dropdownColor: AppColors.surfaceLight,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: AppColors.textSecondary,
+                              ),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                              ),
+                              items: _operationTypes.map((op) {
+                                return DropdownMenuItem<String>(
+                                  value: op['id'].toString(),
+                                  child: Text(
+                                    op['name'].toString(),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  task.operationType = newValue;
+                                });
+                              },
+                            ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -644,7 +722,11 @@ class _NewJobOrderState extends State<NewJobOrder> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const Icon(Icons.link, color: AppColors.primary, size: 20),
+                              const Icon(
+                                Icons.link,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
                             ],
                           ),
                         ),
@@ -688,24 +770,31 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 20,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: _isSubmitting 
-                  ? const SizedBox(
-                      width: 24, height: 24, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
-                  : const Text(
-                  'Submit Order',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Order',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ),

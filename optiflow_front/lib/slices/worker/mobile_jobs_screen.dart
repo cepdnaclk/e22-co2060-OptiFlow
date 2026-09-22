@@ -13,7 +13,11 @@ class MobileJobsScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'CURRENT JOBS',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
       ),
       body: Padding(
@@ -24,10 +28,15 @@ class MobileJobsScreen extends StatelessWidget {
             const SizedBox(height: 10),
             const Text(
               "URGENT PRIORITY",
-              style: TextStyle(color: Colors.blueGrey, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
             ),
             const SizedBox(height: 12),
-            
+
             // The Main Active Job Card
             Container(
               width: double.infinity,
@@ -43,14 +52,30 @@ class MobileJobsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("WEDDING INVITATIONS", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                  const Text("Job #405 • Royal Events Ltd.", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  const Text(
+                    "WEDDING INVITATIONS",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "Job #405 • Royal Events Ltd.",
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
                   const SizedBox(height: 30),
                   Row(
                     children: const [
                       Icon(Icons.timer_outlined, color: Colors.white, size: 20),
                       SizedBox(width: 8),
-                      Text("15 mins remaining", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                      Text(
+                        "15 mins remaining",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -62,9 +87,17 @@ class MobileJobsScreen extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF0369A1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text("MARK AS COMPLETE", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+                      child: const Text(
+                        "MARK AS COMPLETE",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
                     ),
                   ),
                 ],

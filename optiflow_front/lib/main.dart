@@ -65,9 +65,9 @@ class MyApp extends StatelessWidget {
     final desktopTheme = ThemeData.dark().copyWith(
       scaffoldBackgroundColor: const Color(0xFF141518),
       colorScheme: const ColorScheme.dark(
-        primary:   Color(0xFF5E6AD2),
+        primary: Color(0xFF5E6AD2),
         secondary: Color(0xFF8B75D7),
-        surface:   Color(0xFF1A1B1E),
+        surface: Color(0xFF1A1B1E),
       ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(const Color(0xFF2C2C2E)),
@@ -79,9 +79,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'OptiFlow',
-      theme:      AppTheme.theme,
-      darkTheme:  desktopTheme,
-      themeMode:  ThemeMode.dark,
+      theme: AppTheme.theme,
+      darkTheme: desktopTheme,
+      themeMode: ThemeMode.dark,
       home: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= 600) {
@@ -93,5 +93,4 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
-
 }

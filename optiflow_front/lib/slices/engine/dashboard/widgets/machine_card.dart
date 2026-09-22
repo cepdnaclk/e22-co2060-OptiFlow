@@ -7,7 +7,12 @@ class MachineCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  const MachineCard({super.key, required this.machine, this.onEdit, this.onDelete});
+  const MachineCard({
+    super.key,
+    required this.machine,
+    this.onEdit,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +57,11 @@ class MachineCard extends StatelessWidget {
             color: _getStatusColor(machine.status).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(Icons.print, color: _getStatusColor(machine.status), size: 28),
+          child: Icon(
+            Icons.print,
+            color: _getStatusColor(machine.status),
+            size: 28,
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -83,24 +92,43 @@ class MachineCard extends StatelessWidget {
         ),
         // 3-dot menu
         PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
+          icon: const Icon(
+            Icons.more_vert,
+            color: AppColors.textSecondary,
+            size: 20,
+          ),
           color: AppColors.surfaceLight,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           onSelected: (val) {
             if (val == 'edit') onEdit?.call();
             if (val == 'delete') onDelete?.call();
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Row(children: [
-              Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
-              SizedBox(width: 8),
-              Text('Edit Machine', style: TextStyle(color: AppColors.textPrimary)),
-            ])),
-            const PopupMenuItem(value: 'delete', child: Row(children: [
-              Icon(Icons.delete_outline, size: 16, color: AppColors.error),
-              SizedBox(width: 8),
-              Text('Remove', style: TextStyle(color: AppColors.error)),
-            ])),
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text(
+                    'Edit Machine',
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline, size: 16, color: AppColors.error),
+                  SizedBox(width: 8),
+                  Text('Remove', style: TextStyle(color: AppColors.error)),
+                ],
+              ),
+            ),
           ],
         ),
       ],
@@ -153,14 +181,16 @@ class MachineCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ],
       ),
     );
   }
-
-
 
   Widget _buildSpecsGrid() {
     // Show real data: machine type and a note about capabilities
@@ -180,12 +210,19 @@ class MachineCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

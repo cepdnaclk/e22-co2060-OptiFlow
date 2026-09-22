@@ -32,7 +32,11 @@ class _JobsScreenState extends State<JobsScreen> {
   Future<void> _fetchJobs() async {
     setState(() => _isLoading = true);
     final jobs = await SupabaseService.instance.fetchJobsWithTasks();
-    if (mounted) setState(() { _jobs = jobs; _isLoading = false; });
+    if (mounted)
+      setState(() {
+        _jobs = jobs;
+        _isLoading = false;
+      });
   }
 
   Future<void> _optimizeJob(String jobId, List tasks) async {
@@ -58,19 +62,24 @@ class _JobsScreenState extends State<JobsScreen> {
       if (resp.statusCode == 200) {
         // Parse the rich response to show quality + makespan
         Map<String, dynamic> body = {};
-        try { body = json.decode(resp.body) as Map<String, dynamic>; } catch (_) {}
-        final quality  = body['quality']?.toString() ?? 'optimal';
+        try {
+          body = json.decode(resp.body) as Map<String, dynamic>;
+        } catch (_) {}
+        final quality = body['quality']?.toString() ?? 'optimal';
         final makespan = body['makespan_minutes'];
-        final skipped  = body['skipped_tasks'] as int? ?? 0;
+        final skipped = body['skipped_tasks'] as int? ?? 0;
 
-        String msg = '✅ Schedule ${quality == 'optimal' ? 'optimally' : 'feasibly'} computed';
+        String msg =
+            '✅ Schedule ${quality == 'optimal' ? 'optimally' : 'feasibly'} computed';
         if (makespan != null) msg += ' — makespan: ${makespan} min';
-        if (skipped > 0)      msg += ' ($skipped task(s) skipped)';
+        if (skipped > 0) msg += ' ($skipped task(s) skipped)';
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(msg),
-            backgroundColor: quality == 'optimal' ? AppColors.success : AppColors.warning,
+            backgroundColor: quality == 'optimal'
+                ? AppColors.success
+                : AppColors.warning,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -106,7 +115,6 @@ class _JobsScreenState extends State<JobsScreen> {
       if (mounted) setState(() => _optimizing[jobId] = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,8 +167,10 @@ class _JobsScreenState extends State<JobsScreen> {
         Text(
           "Jobs",
           style: TextStyle(
-            fontSize: 36, fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary, letterSpacing: -1,
+            fontSize: 36,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            letterSpacing: -1,
           ),
         ),
         SizedBox(height: 8),
@@ -198,12 +208,16 @@ class _JobsScreenState extends State<JobsScreen> {
                 Text(
                   "Existing Jobs (${_jobs.length})",
                   style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    color: AppColors.primary,
+                  ),
                   tooltip: 'Refresh',
                   onPressed: _fetchJobs,
                 ),
@@ -215,7 +229,9 @@ class _JobsScreenState extends State<JobsScreen> {
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(48),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
             )
           else if (_jobs.isEmpty)
             Padding(
@@ -223,15 +239,19 @@ class _JobsScreenState extends State<JobsScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 48,
-                        color: AppColors.textSecondary.withOpacity(0.3)),
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 48,
+                      color: AppColors.textSecondary.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'No jobs yet.\nCreate your first job order on the right.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.textSecondary.withOpacity(0.7),
-                        fontStyle: FontStyle.italic, fontSize: 15,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 15,
                       ),
                     ),
                   ],
@@ -243,8 +263,10 @@ class _JobsScreenState extends State<JobsScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _jobs.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: AppColors.surfaceLight.withOpacity(0.3)),
+              separatorBuilder: (_, __) => Divider(
+                height: 1,
+                color: AppColors.surfaceLight.withOpacity(0.3),
+              ),
               itemBuilder: (_, i) => _buildJobTile(_jobs[i]),
             ),
         ],
@@ -266,8 +288,10 @@ class _JobsScreenState extends State<JobsScreen> {
         InkWell(
           onTap: () {
             setState(() {
-              if (isExpanded) _expanded.remove(jobId);
-              else _expanded.add(jobId);
+              if (isExpanded)
+                _expanded.remove(jobId);
+              else
+                _expanded.add(jobId);
             });
           },
           child: Padding(
@@ -276,7 +300,8 @@ class _JobsScreenState extends State<JobsScreen> {
               children: [
                 // Status dot
                 Container(
-                  width: 10, height: 10,
+                  width: 10,
+                  height: 10,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -300,7 +325,8 @@ class _JobsScreenState extends State<JobsScreen> {
                       Text(
                         '${job['client_name'] ?? 'Unknown'} · ${_formatQty(job['total_quantity'])} units',
                         style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary,
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -315,7 +341,8 @@ class _JobsScreenState extends State<JobsScreen> {
                     Text(
                       deadline,
                       style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary,
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -339,7 +366,9 @@ class _JobsScreenState extends State<JobsScreen> {
             decoration: BoxDecoration(
               color: AppColors.surfaceLight.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.surfaceLight.withOpacity(0.4)),
+              border: Border.all(
+                color: AppColors.surfaceLight.withOpacity(0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,62 +387,87 @@ class _JobsScreenState extends State<JobsScreen> {
                       ),
                     ),
                     // Optimize button — disabled for COMPLETED jobs
-                    Builder(builder: (ctx) {
-                      final isCompleted = status == 'COMPLETED';
-                      final canOptimize = !isOptimizing && !isCompleted;
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: canOptimize ? AppColors.primaryGradient : null,
-                          color: canOptimize ? null : AppColors.surfaceLight.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: canOptimize ? [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 8, offset: const Offset(0, 4),
-                            ),
-                          ] : null,
-                        ),
-                        child: Tooltip(
-                          message: isCompleted
-                              ? 'Job is already completed'
-                              : tasks.isEmpty
-                                  ? 'Add tasks before optimizing'
-                                  : 'Run CP-SAT optimizer',
-                          child: ElevatedButton.icon(
-                            onPressed: canOptimize ? () => _optimizeJob(jobId, tasks) : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            icon: isOptimizing
-                                ? const SizedBox(
-                                    width: 14, height: 14,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2,
+                    Builder(
+                      builder: (ctx) {
+                        final isCompleted = status == 'COMPLETED';
+                        final canOptimize = !isOptimizing && !isCompleted;
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: canOptimize
+                                ? AppColors.primaryGradient
+                                : null,
+                            color: canOptimize
+                                ? null
+                                : AppColors.surfaceLight.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: canOptimize
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  )
-                                : Icon(
-                                    isCompleted ? Icons.check_circle_outline : Icons.auto_fix_high,
-                                    color: canOptimize ? Colors.white : AppColors.textSecondary,
-                                    size: 16,
-                                  ),
-                            label: Text(
-                              isOptimizing ? 'Optimizing…' : isCompleted ? 'Completed' : 'Optimize',
-                              style: TextStyle(
-                                color: canOptimize ? Colors.white : AppColors.textSecondary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                  ]
+                                : null,
+                          ),
+                          child: Tooltip(
+                            message: isCompleted
+                                ? 'Job is already completed'
+                                : tasks.isEmpty
+                                ? 'Add tasks before optimizing'
+                                : 'Run CP-SAT optimizer',
+                            child: ElevatedButton.icon(
+                              onPressed: canOptimize
+                                  ? () => _optimizeJob(jobId, tasks)
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              icon: isOptimizing
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      isCompleted
+                                          ? Icons.check_circle_outline
+                                          : Icons.auto_fix_high,
+                                      color: canOptimize
+                                          ? Colors.white
+                                          : AppColors.textSecondary,
+                                      size: 16,
+                                    ),
+                              label: Text(
+                                isOptimizing
+                                    ? 'Optimizing…'
+                                    : isCompleted
+                                    ? 'Completed'
+                                    : 'Optimize',
+                                style: TextStyle(
+                                  color: canOptimize
+                                      ? Colors.white
+                                      : AppColors.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }),
-
+                        );
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -422,7 +476,8 @@ class _JobsScreenState extends State<JobsScreen> {
                     'No tasks defined for this job.',
                     style: TextStyle(
                       color: AppColors.textSecondary.withOpacity(0.6),
-                      fontStyle: FontStyle.italic, fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 13,
                     ),
                   )
                 else
@@ -436,8 +491,11 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Widget _buildTaskRow(Map<String, dynamic> task) {
     final opTypeName =
-        (task['operation_types'] as Map?)?['name']?.toString() ?? task['operation_type_id']?.toString() ?? '—';
-    final resourceName = (task['resources'] as Map?)?['name']?.toString() ?? 'Unassigned';
+        (task['operation_types'] as Map?)?['name']?.toString() ??
+        task['operation_type_id']?.toString() ??
+        '—';
+    final resourceName =
+        (task['resources'] as Map?)?['name']?.toString() ?? 'Unassigned';
     final taskStatus = task['status']?.toString() ?? 'PENDING';
     final qty = task['quantity_to_process'];
 
@@ -445,8 +503,11 @@ class _JobsScreenState extends State<JobsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(Icons.subdirectory_arrow_right_rounded,
-              size: 16, color: AppColors.textSecondary.withOpacity(0.5)),
+          Icon(
+            Icons.subdirectory_arrow_right_rounded,
+            size: 16,
+            color: AppColors.textSecondary.withOpacity(0.5),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -455,13 +516,16 @@ class _JobsScreenState extends State<JobsScreen> {
                 Text(
                   task['name']?.toString() ?? 'Unnamed Task',
                   style: const TextStyle(
-                    color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   '$opTypeName · $qty units · $resourceName',
                   style: TextStyle(
-                    color: AppColors.textSecondary.withOpacity(0.8), fontSize: 12,
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -485,7 +549,9 @@ class _JobsScreenState extends State<JobsScreen> {
       child: Text(
         status,
         style: TextStyle(
-          color: color, fontSize: 11, fontWeight: FontWeight.bold,
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -494,10 +560,17 @@ class _JobsScreenState extends State<JobsScreen> {
   Widget _taskStatusBadge(String status) {
     Color color;
     switch (status) {
-      case 'COMPLETED':   color = AppColors.success; break;
-      case 'IN_PROGRESS': color = AppColors.info; break;
-      case 'SCHEDULED':   color = AppColors.secondary; break;
-      default:            color = AppColors.textSecondary;
+      case 'COMPLETED':
+        color = AppColors.success;
+        break;
+      case 'IN_PROGRESS':
+        color = AppColors.info;
+        break;
+      case 'SCHEDULED':
+        color = AppColors.secondary;
+        break;
+      default:
+        color = AppColors.textSecondary;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -507,18 +580,26 @@ class _JobsScreenState extends State<JobsScreen> {
       ),
       child: Text(
         status,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'COMPLETED':   return AppColors.success;
+      case 'COMPLETED':
+        return AppColors.success;
       case 'IN_PROGRESS':
-      case 'SCHEDULED':   return AppColors.info;
-      case 'OPEN':        return AppColors.secondary;
-      default:            return AppColors.textSecondary; // DRAFT
+      case 'SCHEDULED':
+        return AppColors.info;
+      case 'OPEN':
+        return AppColors.secondary;
+      default:
+        return AppColors.textSecondary; // DRAFT
     }
   }
 
@@ -527,7 +608,9 @@ class _JobsScreenState extends State<JobsScreen> {
     try {
       final dt = DateTime.parse(raw.toString()).toLocal();
       return 'Due ${DateFormat('MMM d, yyyy').format(dt)}';
-    } catch (_) { return 'No deadline'; }
+    } catch (_) {
+      return 'No deadline';
+    }
   }
 
   String _formatQty(dynamic qty) {

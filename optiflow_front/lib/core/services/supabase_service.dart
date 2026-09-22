@@ -75,11 +75,10 @@ class SupabaseService {
     required String type,
     required String status,
   }) async {
-    await _db.from('resources').update({
-      'name': name,
-      'type': type,
-      'status': status,
-    }).eq('id', id);
+    await _db
+        .from('resources')
+        .update({'name': name, 'type': type, 'status': status})
+        .eq('id', id);
     invalidateCache();
   }
 
@@ -95,10 +94,10 @@ class SupabaseService {
     required String name,
     required String status,
   }) async {
-    await _db.from('resources').update({
-      'name': name,
-      'status': status,
-    }).eq('id', id);
+    await _db
+        .from('resources')
+        .update({'name': name, 'status': status})
+        .eq('id', id);
     invalidateCache();
   }
 
@@ -110,7 +109,9 @@ class SupabaseService {
     try {
       final res = await _db
           .from('jobs')
-          .select('id, title, client_name, total_quantity, status, deadline, created_at')
+          .select(
+            'id, title, client_name, total_quantity, status, deadline, created_at',
+          )
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res as List);
     } catch (e) {
@@ -148,9 +149,7 @@ class SupabaseService {
   /// All tasks joined with job title, resource name, and operation type.
   Future<List<Map<String, dynamic>>> fetchAllTasks() async {
     try {
-      final res = await _db
-          .from('tasks')
-          .select('''
+      final res = await _db.from('tasks').select('''
             id, name, status, quantity_to_process,
             scheduled_start_time, scheduled_end_time,
             operation_type_id,
@@ -185,9 +184,7 @@ class SupabaseService {
 
   Future<List<Map<String, dynamic>>> fetchCapabilities() async {
     try {
-      final res = await _db
-          .from('resource_capabilities')
-          .select('''
+      final res = await _db.from('resource_capabilities').select('''
             id,
             processing_rate_per_hr,
             setup_time_minutes,
@@ -228,21 +225,28 @@ class SupabaseService {
       ]);
 
       final machines = results[0];
-      final jobs     = results[1];
-      final tasks    = results[2];
+      final jobs = results[1];
+      final tasks = results[2];
 
-      final activeM  = machines.where((m) => m['status'] == 'ACTIVE').toList();
-      final idleM    = machines.where((m) => m['status'] == 'IDLE').toList();
+      final activeM = machines.where((m) => m['status'] == 'ACTIVE').toList();
+      final idleM = machines.where((m) => m['status'] == 'IDLE').toList();
       final offlineM = machines.where((m) => m['status'] == 'OFFLINE').toList();
 
-      final pendingTasks    = tasks.where((t) => t['status'] == 'PENDING').toList();
-      final inProgressTasks = tasks.where((t) => t['status'] == 'IN_PROGRESS').toList();
-      final completedTasks  = tasks.where((t) => t['status'] == 'COMPLETED').toList();
+      final pendingTasks = tasks
+          .where((t) => t['status'] == 'PENDING')
+          .toList();
+      final inProgressTasks = tasks
+          .where((t) => t['status'] == 'IN_PROGRESS')
+          .toList();
+      final completedTasks = tasks
+          .where((t) => t['status'] == 'COMPLETED')
+          .toList();
 
       // Group tasks by operation type name (for chart)
       final Map<String, int> tasksByOpType = {};
       for (final t in tasks) {
-        final opName = (t['operation_types'] as Map?)?['name'] as String? ?? 'Other';
+        final opName =
+            (t['operation_types'] as Map?)?['name'] as String? ?? 'Other';
         tasksByOpType[opName] = (tasksByOpType[opName] ?? 0) + 1;
       }
 
@@ -260,19 +264,19 @@ class SupabaseService {
       }).toList();
 
       final stats = {
-        'active_machines':   activeM.length,
-        'idle_machines':     idleM.length,
-        'offline_machines':  offlineM,
-        'total_machines':    machines.length,
-        'total_jobs':        jobs.length,
-        'total_tasks':       tasks.length,
-        'pending_tasks':     pendingTasks.length,
+        'active_machines': activeM.length,
+        'idle_machines': idleM.length,
+        'offline_machines': offlineM,
+        'total_machines': machines.length,
+        'total_jobs': jobs.length,
+        'total_tasks': tasks.length,
+        'pending_tasks': pendingTasks.length,
         'in_progress_tasks': inProgressTasks.length,
-        'completed_tasks':   completedTasks.length,
-        'tasks_by_op_type':  tasksByOpType,
-        'recent_tasks':      tasks.take(5).toList(),
-        'new_jobs':          jobs.take(5).toList(),
-        'overdue_jobs':      overdueJobs,
+        'completed_tasks': completedTasks.length,
+        'tasks_by_op_type': tasksByOpType,
+        'recent_tasks': tasks.take(5).toList(),
+        'new_jobs': jobs.take(5).toList(),
+        'overdue_jobs': overdueJobs,
         'uptime_pct': machines.isEmpty
             ? 0.0
             : (activeM.length / machines.length * 100.0),

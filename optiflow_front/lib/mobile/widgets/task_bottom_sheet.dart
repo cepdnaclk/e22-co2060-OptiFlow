@@ -43,8 +43,10 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        _showSnack('Error: ${e.toString().replaceFirst('Exception: ', '')}',
-            isError: true);
+        _showSnack(
+          'Error: ${e.toString().replaceFirst('Exception: ', '')}',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -57,39 +59,50 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _QAProofSheet(task: widget.task, onDone: () {
-        widget.onStatusChanged();
-        Navigator.of(context).pop(); // close the task sheet too
-      }),
+      builder: (_) => _QAProofSheet(
+        task: widget.task,
+        onDone: () {
+          widget.onStatusChanged();
+          Navigator.of(context).pop(); // close the task sheet too
+        },
+      ),
     );
   }
 
   void _showSnack(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          msg,
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600)),
-      backgroundColor:
-          isError ? AppColors.offline : const Color(0xFF222222),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-    ));
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: isError ? AppColors.offline : const Color(0xFF222222),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      ),
+    );
   }
 
   Widget _buildActionButton() {
     if (widget.task.status == 'SCHEDULED') {
       return ElevatedButton(
         onPressed: _loading ? null : () => _updateStatus('IN_PROGRESS'),
-        style: AppTheme.pillButtonStyle(
-          bg: const Color(0xFF222222),
-        ),
+        style: AppTheme.pillButtonStyle(bg: const Color(0xFF222222)),
         child: _loading
             ? const SizedBox(
-                width: 22, height: 22,
+                width: 22,
+                height: 22,
                 child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2.5))
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
             : const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -107,9 +120,13 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
         style: AppTheme.pillButtonStyle(bg: AppColors.primary),
         child: _loading
             ? const SizedBox(
-                width: 22, height: 22,
+                width: 22,
+                height: 22,
                 child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2.5))
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
             : const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -133,8 +150,11 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_rounded,
-              color: AppColors.completed, size: 20),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: AppColors.completed,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Text(
             'Completed',
@@ -155,8 +175,7 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.bottomSheet,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(28, 0, 28, 32),
       child: Column(
@@ -200,11 +219,17 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
           const SizedBox(height: 24),
 
           // ── Detail rows ────────────────────────────────────────────────────
-          _detailRow(Icons.precision_manufacturing_outlined,
-              'Operation', t.operationTypeId),
+          _detailRow(
+            Icons.precision_manufacturing_outlined,
+            'Operation',
+            t.operationTypeId,
+          ),
           const SizedBox(height: 14),
-          _detailRow(Icons.schedule_rounded, 'Scheduled',
-              '${t.formattedDate} at ${t.formattedTime}'),
+          _detailRow(
+            Icons.schedule_rounded,
+            'Scheduled',
+            '${t.formattedDate} at ${t.formattedTime}',
+          ),
           const SizedBox(height: 14),
           _detailRow(Icons.memory_rounded, 'Machine', t.resourceName),
 
@@ -230,16 +255,22 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textDisabled,
-                    fontWeight: FontWeight.w500)),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textDisabled,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ],
         ),
       ],
@@ -273,8 +304,10 @@ class _QAProofSheetState extends State<_QAProofSheet> {
   Future<void> _pickImage() async {
     HapticFeedback.lightImpact();
     final picker = ImagePicker();
-    final picked =
-        await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+    final picked = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
     if (picked != null && mounted) {
       setState(() => _image = picked);
     }
@@ -291,7 +324,7 @@ class _QAProofSheetState extends State<_QAProofSheet> {
           : 'no_photo_provided';
 
       await ApiService.instance.submitJobProof(
-        jobId: widget.task.id,  // Using task.id as the job proxy
+        jobId: widget.task.id, // Using task.id as the job proxy
         proofUrl: proofUrl,
         notes: _notesCtrl.text.trim().isEmpty
             ? 'No notes.'
@@ -300,22 +333,32 @@ class _QAProofSheetState extends State<_QAProofSheet> {
 
       if (mounted) {
         widget.onDone();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Proof submitted! Manager will review.',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-          backgroundColor: const Color(0xFF222222),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Proof submitted! Manager will review.',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFF222222),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+            ),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.offline,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.offline,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -330,7 +373,11 @@ class _QAProofSheetState extends State<_QAProofSheet> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(
-          28, 0, 28, MediaQuery.of(context).viewInsets.bottom + 32),
+        28,
+        0,
+        28,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,21 +420,24 @@ class _QAProofSheetState extends State<_QAProofSheet> {
               child: _image != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-                      child: Image.file(
-                        File(_image!.path),
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.file(File(_image!.path), fit: BoxFit.cover),
                     )
                   : const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_rounded,
-                            size: 36, color: AppColors.textDisabled),
+                        Icon(
+                          Icons.add_a_photo_rounded,
+                          size: 36,
+                          color: AppColors.textDisabled,
+                        ),
                         SizedBox(height: 8),
-                        Text('Tap to Snap a Photo',
-                            style: TextStyle(
-                                color: AppColors.textDisabled,
-                                fontWeight: FontWeight.w600)),
+                        Text(
+                          'Tap to Snap a Photo',
+                          style: TextStyle(
+                            color: AppColors.textDisabled,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
             ),
@@ -399,7 +449,9 @@ class _QAProofSheetState extends State<_QAProofSheet> {
             controller: _notesCtrl,
             maxLines: 3,
             style: const TextStyle(
-                color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               hintText: 'Notes for manager (optional)...',
               hintStyle: const TextStyle(color: AppColors.textDisabled),
@@ -421,9 +473,13 @@ class _QAProofSheetState extends State<_QAProofSheet> {
               style: AppTheme.pillButtonStyle(),
               child: _loading
                   ? const SizedBox(
-                      width: 22, height: 22,
+                      width: 22,
+                      height: 22,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5))
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
                   : const Text('Submit for Review'),
             ),
           ),

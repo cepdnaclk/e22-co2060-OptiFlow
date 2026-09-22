@@ -40,7 +40,9 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
             content: Text('Task marked as $newStatus'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: const Color(0xFF2B2B2B),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -70,15 +72,17 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2B2B2B), // Premium Black
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
             elevation: 0,
           ),
-          child: _isLoading 
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Start Task',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Start Task',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
         ),
       );
     } else if (widget.task.status == 'IN_PROGRESS') {
@@ -88,17 +92,21 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
         child: ElevatedButton(
           onPressed: _isLoading ? null : () => _updateStatus('COMPLETED'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4A90E2), // Airbnbish Blue/Action Color
+            backgroundColor: const Color(
+              0xFF4A90E2,
+            ), // Airbnbish Blue/Action Color
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
             elevation: 0,
           ),
-          child: _isLoading 
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Complete Task',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Complete Task',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
         ),
       );
     } else {
@@ -112,7 +120,11 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
         alignment: Alignment.center,
         child: const Text(
           'Completed',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
         ),
       );
     }
@@ -161,11 +173,23 @@ class _TaskBottomSheetState extends State<TaskBottomSheet> {
               ),
             ),
             const SizedBox(height: 32),
-            _buildDetailRow(Icons.precision_manufacturing_outlined, 'Operation', widget.task.operationTypeId),
+            _buildDetailRow(
+              Icons.precision_manufacturing_outlined,
+              'Operation',
+              widget.task.operationTypeId,
+            ),
             const SizedBox(height: 20),
-            _buildDetailRow(Icons.access_time_rounded, 'Scheduled', _formatTime(widget.task.scheduledStartTime)),
+            _buildDetailRow(
+              Icons.access_time_rounded,
+              'Scheduled',
+              _formatTime(widget.task.scheduledStartTime),
+            ),
             const SizedBox(height: 20),
-            _buildDetailRow(Icons.precision_manufacturing_rounded, 'Resource', widget.task.resourceName),
+            _buildDetailRow(
+              Icons.precision_manufacturing_rounded,
+              'Resource',
+              widget.task.resourceName,
+            ),
             const SizedBox(height: 40),
             _buildActionButton(),
             const SizedBox(height: 16),

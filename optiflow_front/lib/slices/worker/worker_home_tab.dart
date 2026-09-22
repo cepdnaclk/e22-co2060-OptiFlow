@@ -50,9 +50,7 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
   }
 
   Widget _buildShimmer() {
-    return const Center(
-      child: CircularProgressIndicator(color: Colors.black),
-    );
+    return const Center(child: CircularProgressIndicator(color: Colors.black));
   }
 
   Widget _buildEmptyState() {
@@ -90,7 +88,7 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text('Refresh'),
-          )
+          ),
         ],
       ),
     );
@@ -99,7 +97,10 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(backgroundColor: const Color(0xFFF7F7F9), body: _buildShimmer());
+      return Scaffold(
+        backgroundColor: const Color(0xFFF7F7F9),
+        body: _buildShimmer(),
+      );
     }
 
     if (_errorMessage != null) {
@@ -113,7 +114,11 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
               const SizedBox(height: 16),
               Text(
                 'Connection Error',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
               ),
               const SizedBox(height: 8),
               Padding(
@@ -130,18 +135,24 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2B2B2B),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('Retry Connection'),
-              )
+              ),
             ],
           ),
         ),
       );
     }
 
-    final inProgressTasks = _tasks.where((t) => t.status == 'IN_PROGRESS').toList();
-    final scheduledTasks = _tasks.where((t) => t.status == 'SCHEDULED').toList();
+    final inProgressTasks = _tasks
+        .where((t) => t.status == 'IN_PROGRESS')
+        .toList();
+    final scheduledTasks = _tasks
+        .where((t) => t.status == 'SCHEDULED')
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9), // Soft off-white background
@@ -179,9 +190,7 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
               ),
             ),
             if (_tasks.isEmpty)
-              SliverFillRemaining(
-                child: _buildEmptyState(),
-              )
+              SliverFillRemaining(child: _buildEmptyState())
             else ...[
               if (inProgressTasks.isNotEmpty) ...[
                 const SliverToBoxAdapter(
@@ -233,20 +242,17 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return TaskCard(
-                          task: scheduledTasks[index],
-                          onTaskUpdated: _fetchTasks,
-                        );
-                      },
-                      childCount: scheduledTasks.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return TaskCard(
+                        task: scheduledTasks[index],
+                        onTaskUpdated: _fetchTasks,
+                      );
+                    }, childCount: scheduledTasks.length),
                   ),
                 ),
               ],
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
-            ]
+            ],
           ],
         ),
       ),

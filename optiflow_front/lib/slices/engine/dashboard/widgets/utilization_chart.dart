@@ -29,7 +29,9 @@ class _UtilizationChartState extends State<UtilizationChart>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        duration: const Duration(milliseconds: 1200), vsync: this);
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
     _ctrl.forward();
   }
@@ -42,7 +44,8 @@ class _UtilizationChartState extends State<UtilizationChart>
 
   @override
   Widget build(BuildContext context) {
-    final total = widget.activeMachines + widget.idleMachines + widget.offlineMachines;
+    final total =
+        widget.activeMachines + widget.idleMachines + widget.offlineMachines;
     final activePct = total == 0 ? 0.0 : widget.activeMachines / total;
 
     return Container(
@@ -63,8 +66,11 @@ class _UtilizationChartState extends State<UtilizationChart>
                   color: AppColors.matteBlue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Icon(Icons.precision_manufacturing_rounded,
-                    color: AppColors.matteBlue, size: 14),
+                child: const Icon(
+                  Icons.precision_manufacturing_rounded,
+                  color: AppColors.matteBlue,
+                  size: 14,
+                ),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -99,11 +105,15 @@ class _UtilizationChartState extends State<UtilizationChart>
             ),
           ),
           const SizedBox(height: 16),
-          _buildRow(AppColors.matteGreen,  'Active',  '${widget.activeMachines}/$total'),
+          _buildRow(
+            AppColors.matteGreen,
+            'Active',
+            '${widget.activeMachines}/$total',
+          ),
           const SizedBox(height: 8),
-          _buildRow(AppColors.matteAmber, 'Idle',    '${widget.idleMachines}'),
+          _buildRow(AppColors.matteAmber, 'Idle', '${widget.idleMachines}'),
           const SizedBox(height: 8),
-          _buildRow(AppColors.matteRed,   'Offline', '${widget.offlineMachines}'),
+          _buildRow(AppColors.matteRed, 'Offline', '${widget.offlineMachines}'),
         ],
       ),
     );
@@ -121,18 +131,29 @@ class _UtilizationChartState extends State<UtilizationChart>
               decoration: BoxDecoration(
                 color: color,
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 6)],
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.5), blurRadius: 6),
+                ],
               ),
             ),
             const SizedBox(width: 8),
-            Text(label,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12)),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
-        Text(value,
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.w700, fontSize: 13)),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -157,7 +178,7 @@ class _ArcMeterPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height * 0.58;
-    final r  = math.min(cx, cy) * 0.82;
+    final r = math.min(cx, cy) * 0.82;
     const startAngle = math.pi;
     const sweepTotal = math.pi; // Half circle
 
@@ -176,53 +197,91 @@ class _ArcMeterPainter extends CustomPainter {
     );
 
     // Active (green)
-    _drawArc(canvas, cx, cy, r, startAngle, sweepTotal * activePct,
-        AppColors.matteGreen);
+    _drawArc(
+      canvas,
+      cx,
+      cy,
+      r,
+      startAngle,
+      sweepTotal * activePct,
+      AppColors.matteGreen,
+    );
     // Idle (amber)
-    _drawArc(canvas, cx, cy, r, startAngle + sweepTotal * activePct,
-        sweepTotal * idlePct, AppColors.matteAmber);
+    _drawArc(
+      canvas,
+      cx,
+      cy,
+      r,
+      startAngle + sweepTotal * activePct,
+      sweepTotal * idlePct,
+      AppColors.matteAmber,
+    );
     // Offline (red)
     _drawArc(
-        canvas,
-        cx,
-        cy,
-        r,
-        startAngle + sweepTotal * activePct + sweepTotal * idlePct,
-        sweepTotal * offlinePct,
-        AppColors.matteRed);
+      canvas,
+      cx,
+      cy,
+      r,
+      startAngle + sweepTotal * activePct + sweepTotal * idlePct,
+      sweepTotal * offlinePct,
+      AppColors.matteRed,
+    );
 
     // Centre text
     final pct = (textPct * 100).toStringAsFixed(0);
-    _drawCentreText(canvas, Offset(cx, cy - 6), '$pct%',
-        const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 30,
-          fontWeight: FontWeight.w800,
-        ));
-    _drawCentreText(canvas, Offset(cx, cy + 22), 'uptime',
-        const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ));
+    _drawCentreText(
+      canvas,
+      Offset(cx, cy - 6),
+      '$pct%',
+      const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 30,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+    _drawCentreText(
+      canvas,
+      Offset(cx, cy + 22),
+      'uptime',
+      const TextStyle(
+        color: AppColors.textSecondary,
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+      ),
+    );
   }
 
-  void _drawArc(Canvas canvas, double cx, double cy, double r,
-      double start, double sweep, Color color) {
+  void _drawArc(
+    Canvas canvas,
+    double cx,
+    double cy,
+    double r,
+    double start,
+    double sweep,
+    Color color,
+  ) {
     if (sweep <= 0) return;
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 18
       ..strokeCap = StrokeCap.round
       ..color = color;
-    
+
     canvas.drawArc(
-        Rect.fromCircle(center: Offset(cx, cy), radius: r),
-        start, sweep, false, paint);
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      start,
+      sweep,
+      false,
+      paint,
+    );
   }
 
   void _drawCentreText(
-      Canvas canvas, Offset offset, String text, TextStyle style) {
+    Canvas canvas,
+    Offset offset,
+    String text,
+    TextStyle style,
+  ) {
     final tp = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,

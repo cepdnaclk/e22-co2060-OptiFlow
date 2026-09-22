@@ -9,7 +9,7 @@ class Machine {
   final String resolution;
   final int utilization;
   final int completedJobs;
-  
+
   // Active Job Details (nullable)
   final String? currentJobTitle;
   final String? currentJobUser;
@@ -40,7 +40,11 @@ class Machine {
 
     final bool isBusy = status == "ACTIVE";
     // Utilization: 100% if active, 50% if idle, 0% if offline
-    final int utilization = status == "ACTIVE" ? 80 : status == "IDLE" ? 30 : 0;
+    final int utilization = status == "ACTIVE"
+        ? 80
+        : status == "IDLE"
+        ? 30
+        : 0;
 
     return Machine(
       id: rawId,

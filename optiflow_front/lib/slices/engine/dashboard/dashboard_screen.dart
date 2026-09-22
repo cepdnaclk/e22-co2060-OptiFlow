@@ -26,31 +26,28 @@ class _DashboardScreenState extends State<DashboardScreen>
   int _selectedIndex = 0;
 
   // Stats
-  int    _totalJobs       = 0;
-  int    _totalTasks      = 0;
-  int    _pendingTasks    = 0;
-  double _machineUptime   = 0;
-  int    _activeMachines  = 0;
-  int    _idleMachines    = 0;
-  int    _offlineMachines = 0;
+  int _totalJobs = 0;
+  int _totalTasks = 0;
+  int _pendingTasks = 0;
+  double _machineUptime = 0;
+  int _activeMachines = 0;
+  int _idleMachines = 0;
+  int _offlineMachines = 0;
   Map<String, int> _tasksByOpType = {};
-  bool   _isLoading = true;
+  bool _isLoading = true;
 
   // Live clock
   late Timer _clockTimer;
   DateTime _now = DateTime.now();
-
-
 
   @override
   void initState() {
     super.initState();
     _fetchDashboardData();
 
-    _clockTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) { if (mounted) setState(() => _now = DateTime.now()); },
-    );
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
   }
 
   @override
@@ -63,15 +60,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     final stats = await SupabaseService.instance.fetchDashboardStats();
     if (mounted) {
       setState(() {
-        _totalJobs       = stats['total_jobs']       as int? ?? 0;
-        _totalTasks      = stats['total_tasks']      as int? ?? 0;
-        _pendingTasks    = stats['pending_tasks']    as int? ?? 0;
-        _machineUptime   = (stats['uptime_pct'] as num?)?.toDouble() ?? 0.0;
-        _activeMachines  = stats['active_machines']  as int? ?? 0;
-        _idleMachines    = stats['idle_machines']    as int? ?? 0;
+        _totalJobs = stats['total_jobs'] as int? ?? 0;
+        _totalTasks = stats['total_tasks'] as int? ?? 0;
+        _pendingTasks = stats['pending_tasks'] as int? ?? 0;
+        _machineUptime = (stats['uptime_pct'] as num?)?.toDouble() ?? 0.0;
+        _activeMachines = stats['active_machines'] as int? ?? 0;
+        _idleMachines = stats['idle_machines'] as int? ?? 0;
         _offlineMachines = (stats['offline_machines'] as List?)?.length ?? 0;
-        _tasksByOpType   = Map<String, int>.from(stats['tasks_by_op_type'] ?? {});
-        _isLoading       = false;
+        _tasksByOpType = Map<String, int>.from(stats['tasks_by_op_type'] ?? {});
+        _isLoading = false;
       });
     }
   }
@@ -95,14 +92,22 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildCurrentPage() {
     switch (_selectedIndex) {
-      case 0: return _buildCommandCenter();
-      case 1: return const MachinesScreen();
-      case 2: return const ScheduleScreen();
-      case 3: return const JobsScreen();
-      case 4: return const TeamScreen();
-      case 5: return const AnalyticsScreen();
-      case 6: return const SettingsScreen();
-      default: return _buildCommandCenter();
+      case 0:
+        return _buildCommandCenter();
+      case 1:
+        return const MachinesScreen();
+      case 2:
+        return const ScheduleScreen();
+      case 3:
+        return const JobsScreen();
+      case 4:
+        return const TeamScreen();
+      case 5:
+        return const AnalyticsScreen();
+      case 6:
+        return const SettingsScreen();
+      default:
+        return _buildCommandCenter();
     }
   }
 
@@ -118,9 +123,10 @@ class _DashboardScreenState extends State<DashboardScreen>
           children: [
             CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
             SizedBox(height: 16),
-            Text('Initialising Command Center…',
-                style: TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13)),
+            Text(
+              'Initialising Command Center…',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
           ],
         ),
       );
@@ -178,13 +184,11 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: AppColors.matteBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
-              border:
-                  Border.all(color: AppColors.matteBlue.withOpacity(0.3)),
+              border: Border.all(color: AppColors.matteBlue.withOpacity(0.3)),
             ),
             child: const Text(
               'LIVE',
@@ -204,8 +208,11 @@ class _DashboardScreenState extends State<DashboardScreen>
               SupabaseService.instance.invalidateCache();
               _fetchDashboardData();
             },
-            icon: const Icon(Icons.refresh_rounded,
-                color: AppColors.textSecondary, size: 18),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: AppColors.textSecondary,
+              size: 18,
+            ),
             tooltip: 'Refresh',
           ),
           const SizedBox(width: 8),
@@ -227,7 +234,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               Text(
                 dateStr,
                 style: const TextStyle(
-                    color: AppColors.textMuted, fontSize: 11),
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                ),
               ),
             ],
           ),
@@ -240,9 +249,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildMachineStatusStrip() {
     final metrics = [
-      (_activeMachines,  'ACTIVE',   AppColors.matteGreen),
-      (_idleMachines,    'IDLE',     AppColors.matteAmber),
-      (_offlineMachines, 'OFFLINE',  AppColors.matteRed),
+      (_activeMachines, 'ACTIVE', AppColors.matteGreen),
+      (_idleMachines, 'IDLE', AppColors.matteAmber),
+      (_offlineMachines, 'OFFLINE', AppColors.matteRed),
     ];
 
     return Row(
@@ -322,16 +331,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            flex: 5,
-            child: OpTypeChart(tasksByOpType: _tasksByOpType),
-          ),
+          Expanded(flex: 5, child: OpTypeChart(tasksByOpType: _tasksByOpType)),
           const SizedBox(width: 16),
           Expanded(
             flex: 3,
             child: UtilizationChart(
-              activeMachines:  _activeMachines,
-              idleMachines:    _idleMachines,
+              activeMachines: _activeMachines,
+              idleMachines: _idleMachines,
               offlineMachines: _offlineMachines,
             ),
           ),
@@ -366,10 +372,20 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final wd = days[dt.weekday - 1];
     return '$wd ${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
@@ -405,10 +421,7 @@ class _MachineStatusPill extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 10),
           Text(
