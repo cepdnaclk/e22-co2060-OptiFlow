@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'api/mobile_api_service.dart';
 import 'mobile_dashboard_screen.dart';
 
 class MobileLoginScreen extends StatefulWidget {
@@ -10,24 +11,41 @@ class MobileLoginScreen extends StatefulWidget {
 }
 
 class _MobileLoginScreenState extends State<MobileLoginScreen> {
-  // Hardcoded resources for demo purposes
-  final List<Map<String, String>> _resources = [
-    {
-      'id': '1e9d1f7e-1234-4a5b-8c6d-9e8f7a6b5c4d',
-      'name': 'Machine Operator A',
-      'role': 'Folding',
-    },
-    {
-      'id': '2f8e2a6d-2345-5b6c-9d7e-0f1e2a3b4c5d',
-      'name': 'Printer B',
-      'role': 'Printing',
-    },
-    {
-      'id': '3a7d3b5c-3456-6c7d-0e8f-1f2e3a4b5c6e',
-      'name': 'Cutter C',
-      'role': 'Cutting',
-    },
-  ];
+  final MobileApiService _apiService = MobileApiService();
+
+  List<Map<String, String>> _resources = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWorkers();
+  }
+
+  Future<void> _fetchWorkers() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final workers = await _apiService.fetchHumanWorkers();
+      if (mounted) {
+        setState(() {
+          _resources = workers;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _selectResource(String resourceId) {
     HapticFeedback.lightImpact();
@@ -99,23 +117,87 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
               ),
               const SizedBox(height: 48),
               Expanded(
-                child: ListView.separated(
-                  itemCount: _resources.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final resource = _resources[index];
-                    return _buildResourceCard(
-                      name: resource['name']!,
-                      role: resource['role']!,
-                      onTap: () => _selectResource(resource['id']!),
-                    );
-                  },
-                ),
+                child: _buildWorkerList(),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildWorkerList() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF2B2B2B),
+        ),
+      );
+    }
+
+    if (_errorMessage != null && _resources.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            const Text(
+              'Could not load team members',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2B2B2B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Please check your backend connection and try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _fetchWorkers,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2B2B2B),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_resources.isEmpty) {
+      return Center(
+        child: Text(
+          'No active workers found.',
+          style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchWorkers,
+      color: const Color(0xFF2B2B2B),
+      child: ListView.separated(
+        itemCount: _resources.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final resource = _resources[index];
+          return _buildResourceCard(
+            name: resource['name']!,
+            role: resource['role']!,
+            onTap: () => _selectResource(resource['id']!),
+          );
+        },
       ),
     );
   }
@@ -149,7 +231,7 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
-                Icons.precision_manufacturing_rounded,
+                Icons.person_rounded,
                 color: Color(0xFF2B2B2B),
               ),
             ),

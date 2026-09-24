@@ -68,3 +68,12 @@ class OptimizationRequest(BaseModel):
     # If the Flutter app doesn't send them, default to 70% Time / 30% Cost
     alpha: int = 70  
     beta: int = 30
+
+
+# ─────────────────────────────────────────
+# WORKER MACHINE ASSIGNMENTS
+# ─────────────────────────────────────────
+
+class WorkerMachineAssignmentCreate(BaseModel):
+    worker_id: str
+    machine_id: str

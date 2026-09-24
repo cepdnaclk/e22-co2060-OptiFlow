@@ -13,6 +13,7 @@ import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 import 'package:optiflow_scheduler/slices/admin/team_screen.dart';
 import 'package:optiflow_scheduler/slices/engine/analytics_screen.dart';
 import 'package:optiflow_scheduler/slices/admin/settings_screen.dart';
+import 'package:optiflow_scheduler/slices/worker/mobile_login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -106,6 +107,30 @@ class _DashboardScreenState extends State<DashboardScreen>
         return const AnalyticsScreen();
       case 6:
         return const SettingsScreen();
+      case 7:
+        return Center(
+          child: Container(
+            width: 412,
+            height: 820,
+            margin: const EdgeInsets.symmetric(vertical: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F7F9),
+              borderRadius: BorderRadius.circular(36),
+              border: Border.all(color: const Color(0xFF2C2C2E), width: 6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: const MobileLoginScreen(),
+            ),
+          ),
+        );
       default:
         return _buildCommandCenter();
     }

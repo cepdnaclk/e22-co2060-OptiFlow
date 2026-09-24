@@ -151,7 +151,7 @@ class _WorkerHomeTabState extends State<WorkerHomeTab> {
         .where((t) => t.status == 'IN_PROGRESS')
         .toList();
     final scheduledTasks = _tasks
-        .where((t) => t.status == 'SCHEDULED')
+        .where((t) => t.status == 'SCHEDULED' || t.status == 'PENDING')
         .toList();
 
     return Scaffold(
