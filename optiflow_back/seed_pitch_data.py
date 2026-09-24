@@ -18,7 +18,7 @@ def seed_database():
 
     # Clear old data
     try:
-        tables = ["incidents", "tasks", "jobs", "resource_capabilities", "resources", "operation_types"]
+        tables = ["incidents", "tasks", "jobs", "resource_capabilities", "worker_machine_assignments", "resources", "operation_types"]
         for table in tables:
             try:
                 client.table(table).delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
@@ -186,6 +186,19 @@ def seed_database():
     client.table("resource_capabilities").insert(capabilities).execute()
     print("Inserted Resource Capabilities.")
 
+    # =======================================================
+    # 7. WORKER MACHINE ASSIGNMENTS
+    # =======================================================
+    try:
+        worker_machine_assignments = [
+            {"id": str(uuid.uuid4()), "worker_id": h2, "machine_id": m2},  # Marcus Johnson -> HP Indigo
+            {"id": str(uuid.uuid4()), "worker_id": h3, "machine_id": m4},  # Elena Rodriguez -> Horizon BQ-470
+            {"id": str(uuid.uuid4()), "worker_id": h4, "machine_id": m5},  # David Kim -> Epson SureColor
+        ]
+        client.table("worker_machine_assignments").insert(worker_machine_assignments).execute()
+        print("Inserted Worker-Machine Assignments.")
+    except Exception as e:
+        print(f"Skipped Worker-Machine Assignments (table not ready in Supabase yet): {e}")
 
     print("✅ Database successfully seeded with MVP Pitch Data!")
 

@@ -236,13 +236,23 @@ def get_dashboard_stats():
         ]
 
         # Recent activity: last 5 completed tasks with job & resource info
-        recent_res = supabase.table("tasks") \
-            .select("id, name, status, completed_at, jobs(title), resources(name)") \
-            .eq("status", "COMPLETED") \
-            .order("completed_at", desc=True) \
-            .limit(5) \
-            .execute()
-        recent_tasks = recent_res.data or []
+        recent_tasks = []
+        for select_str in [
+            "id, name, status, completed_at, jobs(title), resources!tasks_assigned_resource_id_fkey(name)",
+            "id, name, status, completed_at, jobs(title), resources(name)",
+            "id, name, status, completed_at, jobs(title)",
+        ]:
+            try:
+                recent_res = supabase.table("tasks") \
+                    .select(select_str) \
+                    .eq("status", "COMPLETED") \
+                    .order("completed_at", desc=True) \
+                    .limit(5) \
+                    .execute()
+                recent_tasks = recent_res.data or []
+                break
+            except Exception:
+                continue
 
         # Recent jobs created in last 24h
         yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
@@ -283,21 +293,134 @@ def get_analytics_jobs(days: int = Query(30, ge=1, le=365)):
 # SLICE 3: VIKASHAN'S WORKER EXECUTION & SCHEDULE
 # =====================================================================
 
+def _fetch_tasks_query(filter_func=None):
+    """
+    Executes a SELECT query on tasks with fallback logic to handle foreign key 
+    disambiguation for resources (e.g. tasks_assigned_resource_id_fkey).
+    """
+    candidates = [
+        "*, jobs(title), resources!tasks_assigned_resource_id_fkey(name)",
+        "*, jobs(title), resources(name)",
+        "*, jobs(title)",
+    ]
+    for select_str in candidates:
+        try:
+            q = supabase.table("tasks").select(select_str)
+            if filter_func:
+                q = filter_func(q)
+            res = q.execute()
+            return res.data or []
+        except Exception:
+            continue
+    return []
+
+
 @router.get("/schedule")
 def get_schedule():
     """Fetches all scheduled tasks to display on the global schedule/calendar."""
-    # Fetch tasks that have moved past PENDING
-    res = supabase.table("tasks").select("*, jobs(title), resources(name)").neq("status", "PENDING").execute()
-    return res.data
+    return _fetch_tasks_query(lambda q: q.neq("status", "PENDING"))
+
+
+# Initial default mappings for workers to the machines they operate:
+# Marcus Johnson (Press Operator) -> HP Indigo 12000
+# Elena Rodriguez (Bindery Tech)  -> Horizon BQ-470
+# David Kim (Pre-press)           -> Epson SureColor
+DEFAULT_WORKER_MACHINE_MAPPINGS = {
+    "33333333-3333-3333-3333-333333333332": ["22222222-2222-2222-2222-222222222222"],
+    "33333333-3333-3333-3333-333333333333": ["22222222-2222-2222-2222-222222222224"],
+    "33333333-3333-3333-3333-333333333334": ["22222222-2222-2222-2222-222222222225"],
+}
 
 @router.get("/tasks")
 def get_tasks(resource_id: Optional[str] = None):
-    """Fetches tasks, optionally filtered by resource_id for worker dashboards."""
-    query = supabase.table("tasks").select("*, jobs(title), resources(name)")
-    if resource_id:
-        query = query.eq("assigned_resource_id", resource_id)
-    res = query.execute()
-    return res.data
+    """
+    Fetches tasks, optionally filtered by resource_id for worker dashboards.
+    - If resource_id belongs to a MACHINE:
+      Returns tasks directly assigned to that machine.
+    - If resource_id belongs to a HUMAN (worker):
+      1. Finds all machines assigned to this worker from worker_machine_assignments.
+      2. Returns all tasks where assigned_resource_id IN (worker machine IDs).
+      If the worker has no machines assigned, returns an empty list.
+    """
+    if not resource_id:
+        return _fetch_tasks_query()
+
+    # Check whether the given resource_id represents a HUMAN worker or a MACHINE
+    is_human = False
+    try:
+        resource_res = supabase.table("resources").select("id, name, type").eq("id", resource_id).execute()
+        if resource_res.data:
+            is_human = (resource_res.data[0].get("type") == "HUMAN")
+    except Exception as e:
+        print(f"Error checking resource type for {resource_id}: {e}")
+        if resource_id in DEFAULT_WORKER_MACHINE_MAPPINGS:
+            is_human = True
+
+    if is_human:
+        # Step 1: Find all machines assigned to this worker
+        machine_ids = []
+        try:
+            assign_res = (
+                supabase.table("worker_machine_assignments")
+                .select("machine_id")
+                .eq("worker_id", resource_id)
+                .execute()
+            )
+            if assign_res.data:
+                machine_ids = [row["machine_id"] for row in assign_res.data if row.get("machine_id")]
+        except Exception as e:
+            print(f"Notice: worker_machine_assignments table query failed ({e}). Checking fallback mappings.")
+
+        # Fallback to default seed mappings if database returned no rows (e.g. pending DB migration)
+        if not machine_ids and resource_id in DEFAULT_WORKER_MACHINE_MAPPINGS:
+            machine_ids = DEFAULT_WORKER_MACHINE_MAPPINGS[resource_id]
+
+        if not machine_ids:
+            # Worker has no machines assigned; therefore has no tasks
+            return []
+
+        # Step 2: Return tasks assigned to the worker's machines
+        return _fetch_tasks_query(lambda q: q.in_("assigned_resource_id", machine_ids))
+    else:
+        # Resource is a machine (or direct assignment), filter directly
+        return _fetch_tasks_query(lambda q: q.eq("assigned_resource_id", resource_id))
+
+
+# =====================================================================
+# WORKER-MACHINE ASSIGNMENTS MANAGEMENT
+# =====================================================================
+
+@router.get("/worker-machine-assignments")
+def get_worker_machine_assignments():
+    """Fetches all worker-machine assignments."""
+    try:
+        res = supabase.table("worker_machine_assignments") \
+            .select("*, worker:resources!worker_id(id, name, type), machine:resources!machine_id(id, name, type)") \
+            .execute()
+        return res.data
+    except Exception as e:
+        print(f"Error fetching worker_machine_assignments: {e}")
+        fallback_list = []
+        for w_id, m_ids in DEFAULT_WORKER_MACHINE_MAPPINGS.items():
+            for m_id in m_ids:
+                fallback_list.append({"worker_id": w_id, "machine_id": m_id})
+        return fallback_list
+
+@router.post("/worker-machine-assignments")
+def create_worker_machine_assignment(body: WorkerMachineAssignmentCreate):
+    """Assigns a worker to a machine."""
+    data = body.model_dump()
+    data["id"] = str(uuid.uuid4())
+    res = supabase.table("worker_machine_assignments").insert(data).execute()
+    if not res.data:
+        raise HTTPException(status_code=400, detail="Failed to create worker-machine assignment")
+    return res.data[0]
+
+@router.delete("/worker-machine-assignments/{id}")
+def delete_worker_machine_assignment(id: str):
+    """Deletes a worker-machine assignment."""
+    supabase.table("worker_machine_assignments").delete().eq("id", id).execute()
+    return {"message": "Assignment deleted successfully"}
 
 
 @router.patch("/tasks/{task_id}/status")

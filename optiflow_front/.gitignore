@@ -43,3 +43,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Python
+optiflow_back/venv/
+optiflow_back/__pycache__/
+*.pyc
+__pycache__/
+
+# Flutter
+optiflow_front/build/
+optiflow_front/.dart_tool/
+optiflow_front/.flutter-plugins
+optiflow_front/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

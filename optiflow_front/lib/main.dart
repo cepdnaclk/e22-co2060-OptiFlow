@@ -5,7 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // ── Desktop entry (unchanged) ───────────────────────────────────────────────
 import 'package:optiflow_scheduler/slices/engine/dashboard/dashboard_screen.dart';
 
-// ── New Mobile entry (complete rebuild) ─────────────────────────────────────
+// ── New Mobile entry (Worker Job Allocation & Execution) ────────────────────
+import 'package:optiflow_scheduler/slices/worker/mobile_login_screen.dart';
 import 'mobile/core/app_theme.dart';
 import 'mobile/core/auth_service.dart';
 import 'mobile/screens/login_screen.dart';
@@ -37,17 +38,14 @@ class DesktopEntry extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mobile entry widget — checks Supabase session and routes accordingly.
+// Mobile entry widget — routes directly to Worker Mobile Station Login
 // ─────────────────────────────────────────────────────────────────────────────
 class MobileEntry extends StatelessWidget {
   const MobileEntry({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // If there's already a valid session, skip login and go straight to hub.
-    return AuthService.instance.isAuthenticated
-        ? const MainHub()
-        : const LoginScreen();
+    return const MobileLoginScreen();
   }
 }
 

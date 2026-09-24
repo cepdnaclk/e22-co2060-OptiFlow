@@ -131,7 +131,7 @@ class SupabaseService {
               scheduled_start_time, scheduled_end_time,
               operation_type_id,
               operation_types ( name ),
-              resources ( name )
+              resources:resources!tasks_assigned_resource_id_fkey ( name )
             )
           ''')
           .order('created_at', ascending: false);
@@ -154,7 +154,7 @@ class SupabaseService {
             scheduled_start_time, scheduled_end_time,
             operation_type_id,
             jobs ( id, title, client_name, deadline ),
-            resources ( id, name ),
+            resources:resources!tasks_assigned_resource_id_fkey ( id, name ),
             operation_types ( id, name )
           ''');
       return List<Map<String, dynamic>>.from(res as List);

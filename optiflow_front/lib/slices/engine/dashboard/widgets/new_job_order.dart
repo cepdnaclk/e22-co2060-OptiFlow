@@ -282,7 +282,7 @@ class _NewJobOrderState extends State<NewJobOrder> {
 
     try {
       final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/create_job'),
+        Uri.parse('https://e22-co2060-optiflow.onrender.com/create_job'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(orderData),
       );

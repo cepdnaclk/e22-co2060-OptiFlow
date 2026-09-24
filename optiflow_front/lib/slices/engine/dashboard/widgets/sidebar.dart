@@ -26,6 +26,7 @@ class _SidebarState extends State<Sidebar> {
     (3, Icons.inventory_2_rounded, 'Jobs', null),
     (2, Icons.calendar_month_rounded, 'Schedule', null),
     (4, Icons.people_rounded, 'Team', 'ADMIN'),
+    (7, Icons.phone_android_rounded, 'Worker App', 'MOBILE WORKER'),
     (6, Icons.settings_rounded, 'Settings', null),
   ];
 
