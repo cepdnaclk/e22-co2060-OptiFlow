@@ -47,10 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() { _loading = true; _error = null; });
 
     try {
-      // Fetch all tasks from Supabase directly — works without FastAPI.
-      // For MVP: shows the whole factory floor view (all tasks, all machines).
+      // Fetch all tasks from Supabase
       final raw = await SupabaseService.instance.fetchAllTasks();
-      final tasks = raw.map((json) {
+      final allTasks = raw.map((json) {
         // Remap Supabase join shape → TaskModel.fromJson expected shape
         return TaskModel.fromJson({
           ...json,
@@ -60,12 +59,41 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }).toList();
 
+      // Resolve current minder resource ID based on logged-in user
+      final user = AuthService.instance.currentUser;
+      List<TaskModel> filteredTasks = allTasks;
+
+      if (user != null) {
+        final emailPrefix = (user.email ?? '').split('@').first.toLowerCase();
+        final fullName = (user.userMetadata?['full_name']?.toString() ?? '').toLowerCase();
+        final metadataResourceId = user.userMetadata?['resource_id']?.toString();
+
+        String? currentResourceId = metadataResourceId;
+
+        if (currentResourceId == null) {
+          final humanResources = await SupabaseService.instance.fetchHumanResources();
+          for (final r in humanResources) {
+            final rName = (r['name']?.toString() ?? '').toLowerCase();
+            final rId = r['id']?.toString();
+            if ((emailPrefix.isNotEmpty && rName.contains(emailPrefix)) ||
+                (fullName.isNotEmpty && rName.contains(fullName))) {
+              currentResourceId = rId;
+              break;
+            }
+          }
+        }
+
+        if (currentResourceId != null) {
+          filteredTasks = allTasks.where((t) => t.assignedHumanId == currentResourceId).toList();
+        }
+      }
+
       // Sort: IN_PROGRESS first, then PENDING, then SCHEDULED, then COMPLETED
-      tasks.sort((a, b) {
+      filteredTasks.sort((a, b) {
         const order = {'IN_PROGRESS': 0, 'PENDING': 1, 'SCHEDULED': 2, 'COMPLETED': 3};
         return (order[a.status] ?? 9).compareTo(order[b.status] ?? 9);
       });
-      if (mounted) setState(() { _tasks = tasks; _loading = false; });
+      if (mounted) setState(() { _tasks = filteredTasks; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }

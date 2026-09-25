@@ -155,6 +155,7 @@ class SupabaseService {
             id, name, status, quantity_to_process,
             scheduled_start_time, scheduled_end_time,
             operation_type_id,
+            assigned_human_id,
             jobs ( id, title, client_name, deadline ),
             resources:resources!tasks_assigned_resource_id_fkey ( id, name ),
             operation_types ( id, name )

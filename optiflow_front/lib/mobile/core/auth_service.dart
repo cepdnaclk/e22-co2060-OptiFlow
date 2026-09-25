@@ -30,7 +30,11 @@ class AuthService {
     if (meta != null && meta['full_name'] != null) {
       return meta['full_name'] as String;
     }
-    return user.email?.split('@').first ?? 'Worker';
+    final prefix = user.email?.split('@').first ?? 'Worker';
+    if (prefix.toLowerCase().contains('elena')) return 'Elena Rodriguez';
+    if (prefix.toLowerCase().contains('marcus')) return 'Marcus Johnson';
+    if (prefix.toLowerCase().contains('sarah')) return 'Sarah Chen';
+    return prefix[0].toUpperCase() + prefix.substring(1);
   }
 
   // ── Auth Operations ─────────────────────────────────────────────────────────

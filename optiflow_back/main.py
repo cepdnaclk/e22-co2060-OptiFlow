@@ -236,6 +236,7 @@ def claim_job(request: JobClaimRequest):
 # --- NEW OPTIFLOW COMPLEX JOB CREATION (Sadurshika's Task) ---
 
 @app.post("/create_job")
+@app.post("/api/create_job")
 def create_job(order: JobOrderInput):
     print(f"Manager is posting a new complex job: {order.title}")
 
