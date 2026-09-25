@@ -29,25 +29,14 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
 
   Future<void> _loadMachines() async {
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() { _loading = true; _error = null; });
     try {
       // Fetch machines directly from Supabase — no FastAPI needed.
       final raw = await SupabaseService.instance.fetchMachines();
       final machines = raw.map(MachineModel.fromJson).toList();
-      if (mounted)
-        setState(() {
-          _machines = machines;
-          _loading = false;
-        });
+      if (mounted) setState(() { _machines = machines; _loading = false; });
     } catch (e) {
-      if (mounted)
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
   }
 
@@ -56,10 +45,7 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
     final machine = _machines.firstWhere(
       (m) => m.id == machineId,
       orElse: () => MachineModel(
-        id: machineId,
-        name: 'Scanned Machine',
-        status: 'Unknown',
-      ),
+        id: machineId, name: 'Scanned Machine', status: 'Unknown'),
     );
     _openBookingSheet(machine);
   }
@@ -69,8 +55,10 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          MachineBookingSheet(machine: machine, onBookingDone: _loadMachines),
+      builder: (_) => MachineBookingSheet(
+        machine: machine,
+        onBookingDone: _loadMachines,
+      ),
     );
   }
 
@@ -119,17 +107,19 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
             ),
 
             // ── Loading ──────────────────────────────────────────────────────
-            if (_loading)
-              const ShimmerGrid()
+            if (_loading) const ShimmerGrid()
+
             // ── Error ────────────────────────────────────────────────────────
             else if (_error != null)
               SliverFillRemaining(child: _errorState())
+
             // ── Grid ─────────────────────────────────────────────────────────
             else
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
@@ -158,26 +148,19 @@ class MachineMarketScreenState extends State<MachineMarketScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.cloud_off_rounded,
-            size: 60,
-            color: AppColors.textDisabled,
-          ),
+          const Icon(Icons.cloud_off_rounded,
+              size: 60, color: AppColors.textDisabled),
           const SizedBox(height: 20),
-          const Text(
-            'Unable to load machines',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-          ),
+          const Text('Unable to load machines',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary)),
           const SizedBox(height: 8),
-          Text(
-            _error!.replaceFirst('Exception: ', ''),
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
-          ),
+          Text(_error!.replaceFirst('Exception: ', ''),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, height: 1.5)),
           const SizedBox(height: 28),
           ElevatedButton(
             onPressed: _loadMachines,

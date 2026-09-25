@@ -36,7 +36,10 @@ class AuthService {
   // ── Auth Operations ─────────────────────────────────────────────────────────
 
   /// Sign in with email & password. Throws on failure.
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signIn({
+    required String email,
+    required String password,
+  }) async {
     final response = await _client.auth.signInWithPassword(
       email: email.trim(),
       password: password,

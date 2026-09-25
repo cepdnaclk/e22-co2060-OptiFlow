@@ -44,10 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadTasks() async {
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() { _loading = true; _error = null; });
 
     try {
       // Fetch all tasks from Supabase directly — works without FastAPI.
@@ -59,33 +56,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ...json,
           'job_title': (json['jobs'] as Map?)?['title'],
           'resource_name': (json['resources'] as Map?)?['name'],
-          'operation_type_id':
-              (json['operation_types'] as Map?)?['name'] ??
-              json['operation_type_id'],
+          'operation_type_id': (json['operation_types'] as Map?)?['name'] ?? json['operation_type_id'],
         });
       }).toList();
 
       // Sort: IN_PROGRESS first, then PENDING, then SCHEDULED, then COMPLETED
       tasks.sort((a, b) {
-        const order = {
-          'IN_PROGRESS': 0,
-          'PENDING': 1,
-          'SCHEDULED': 2,
-          'COMPLETED': 3,
-        };
+        const order = {'IN_PROGRESS': 0, 'PENDING': 1, 'SCHEDULED': 2, 'COMPLETED': 3};
         return (order[a.status] ?? 9).compareTo(order[b.status] ?? 9);
       });
-      if (mounted)
-        setState(() {
-          _tasks = tasks;
-          _loading = false;
-        });
+      if (mounted) setState(() { _tasks = tasks; _loading = false; });
     } catch (e) {
-      if (mounted)
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
   }
 
@@ -94,7 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => TaskBottomSheet(task: task, onStatusChanged: _loadTasks),
+      builder: (_) => TaskBottomSheet(
+        task: task,
+        onStatusChanged: _loadTasks,
+      ),
     );
   }
 
@@ -103,9 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final name = AuthService.instance.displayName;
     final inProgress = _tasks.where((t) => t.status == 'IN_PROGRESS').toList();
     // Show PENDING and SCHEDULED tasks together in the UP NEXT section
-    final pending = _tasks
-        .where((t) => t.status == 'PENDING' || t.status == 'SCHEDULED')
-        .toList();
+    final pending = _tasks.where((t) => t.status == 'PENDING' || t.status == 'SCHEDULED').toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -171,15 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(24, 24, 24, 8),
-                  child: Text(
-                    'ACTIVE NOW',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
-                      color: AppColors.textDisabled,
-                    ),
-                  ),
+                  child: Text('ACTIVE NOW',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: AppColors.textDisabled)),
                 ),
               ),
               SliverToBoxAdapter(
@@ -200,12 +180,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const ShimmerList(count: 3),
             ]
+
             // ── Error state ──────────────────────────────────────────────────
             else if (_error != null)
-              SliverFillRemaining(child: _errorState())
+              SliverFillRemaining(
+                child: _errorState(),
+              )
+
             // ── Empty state ──────────────────────────────────────────────────
             else if (_tasks.isEmpty)
-              SliverFillRemaining(child: _emptyState())
+              SliverFillRemaining(
+                child: _emptyState(),
+              )
+
             // ── Content ──────────────────────────────────────────────────────
             else ...[
               // "Active Now" carousel
@@ -231,9 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // "Up Next" list — PENDING + SCHEDULED
               if (pending.isNotEmpty) ...[
-                _sectionHeader(
-                  'UP NEXT — ${pending.length} TASK${pending.length > 1 ? 'S' : ''}',
-                ),
+                _sectionHeader('UP NEXT — ${pending.length} TASK${pending.length > 1 ? 'S' : ''}'),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
@@ -282,17 +267,13 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 88, height: 88,
               decoration: BoxDecoration(
                 color: AppColors.completed.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.done_all_rounded,
-                size: 44,
-                color: AppColors.completed,
-              ),
+              child: const Icon(Icons.done_all_rounded,
+                  size: 44, color: AppColors.completed),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -309,10 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'You have no tasks assigned for today.\nCheck back later or explore the Job Market.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 15,
-                height: 1.5,
-              ),
+                  color: AppColors.textSecondary, fontSize: 15, height: 1.5),
             ),
           ],
         ),
@@ -328,43 +306,30 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 88, height: 88,
               decoration: BoxDecoration(
                 color: AppColors.offline.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.wifi_off_rounded,
-                size: 44,
-                color: AppColors.offline,
-              ),
+              child: const Icon(Icons.wifi_off_rounded,
+                  size: 44, color: AppColors.offline),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Connection Error',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            const Text('Connection Error',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary)),
             const SizedBox(height: 8),
             Text(
               _error!.replaceFirst('Exception: ', ''),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5,
-              ),
+                  color: AppColors.textSecondary, fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 28),
             ElevatedButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                _loadTasks();
-              },
+              onPressed: () { HapticFeedback.lightImpact(); _loadTasks(); },
               style: AppTheme.pillButtonStyle(),
               child: const Text('Retry'),
             ),

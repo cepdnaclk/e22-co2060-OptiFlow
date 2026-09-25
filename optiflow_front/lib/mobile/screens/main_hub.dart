@@ -53,7 +53,9 @@ class _MainHubState extends State<MainHub> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _QrScanSheet(onMachineIdScanned: _handleQrMachineId),
+      builder: (_) => _QrScanSheet(
+        onMachineIdScanned: _handleQrMachineId,
+      ),
     );
   }
 
@@ -84,8 +86,10 @@ class _MainHubState extends State<MainHub> {
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
-            builder: (_) =>
-                MachineBookingSheet(machine: machine, onBookingDone: () {}),
+            builder: (_) => MachineBookingSheet(
+              machine: machine,
+              onBookingDone: () {},
+            ),
           );
         }
       } catch (_) {}
@@ -106,7 +110,10 @@ class _MainHubState extends State<MainHub> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
 
       // ── QR Floating Action Button ─────────────────────────────────────────
       floatingActionButton: FloatingActionButton(
@@ -114,11 +121,8 @@ class _MainHubState extends State<MainHub> {
         backgroundColor: AppColors.primary,
         elevation: 4,
         shape: const CircleBorder(),
-        child: const Icon(
-          Icons.qr_code_scanner_rounded,
-          color: Colors.white,
-          size: 26,
-        ),
+        child: const Icon(Icons.qr_code_scanner_rounded,
+            color: Colors.white, size: 26),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
@@ -147,16 +151,14 @@ class _MainHubState extends State<MainHub> {
                 children: [
                   // Left items
                   _NavItem(
-                    index: 0,
-                    currentIndex: _currentIndex,
+                    index: 0, currentIndex: _currentIndex,
                     icon: Icons.check_circle_outline_rounded,
                     activeIcon: Icons.check_circle_rounded,
                     label: 'My Tasks',
                     onTap: () => setState(() => _currentIndex = 0),
                   ),
                   _NavItem(
-                    index: 1,
-                    currentIndex: _currentIndex,
+                    index: 1, currentIndex: _currentIndex,
                     icon: Icons.work_outline_rounded,
                     activeIcon: Icons.work_rounded,
                     label: 'Job Market',
@@ -168,16 +170,14 @@ class _MainHubState extends State<MainHub> {
 
                   // Right items
                   _NavItem(
-                    index: 2,
-                    currentIndex: _currentIndex,
+                    index: 2, currentIndex: _currentIndex,
                     icon: Icons.precision_manufacturing_outlined,
                     activeIcon: Icons.precision_manufacturing_rounded,
                     label: 'Machines',
                     onTap: () => setState(() => _currentIndex = 2),
                   ),
                   _NavItem(
-                    index: 3,
-                    currentIndex: _currentIndex,
+                    index: 3, currentIndex: _currentIndex,
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
                     label: 'Profile',
@@ -223,22 +223,15 @@ class _MainHubState extends State<MainHub> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            Text(name,
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            Text(
-              email,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
+            Text(email,
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 14)),
             const SizedBox(height: 32),
             const Divider(color: AppColors.divider),
             const SizedBox(height: 16),
@@ -247,22 +240,15 @@ class _MainHubState extends State<MainHub> {
               height: 56,
               child: OutlinedButton.icon(
                 onPressed: _signOut,
-                icon: const Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.offline,
-                ),
-                label: const Text(
-                  'Sign Out',
-                  style: TextStyle(
-                    color: AppColors.offline,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                icon: const Icon(Icons.logout_rounded,
+                    color: AppColors.offline),
+                label: const Text('Sign Out',
+                    style: TextStyle(
+                        color: AppColors.offline, fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.offline, width: 1.5),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusPill),
-                  ),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
                 ),
               ),
             ),
@@ -297,10 +283,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = index == currentIndex;
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
+      onTap: () { HapticFeedback.selectionClick(); onTap(); },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 60,
@@ -387,10 +370,10 @@ class _QrScanSheetState extends State<_QrScanSheet> {
                 // Scan frame overlay
                 Center(
                   child: Container(
-                    width: 220,
-                    height: 220,
+                    width: 220, height: 220,
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.primary, width: 3),
+                      border: Border.all(
+                          color: AppColors.primary, width: 3),
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
@@ -400,14 +383,11 @@ class _QrScanSheetState extends State<_QrScanSheet> {
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: Colors.white60,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: const Text('Cancel',
+                        style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -426,3 +406,4 @@ extension _FirstOrNull<T> on Iterable<T> {
     return it.moveNext() ? it.current : null;
   }
 }
+

@@ -28,10 +28,8 @@ class JobCard extends StatelessWidget {
               children: [
                 StatusBadge(status: job.status),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF7F7F9),
                     borderRadius: BorderRadius.circular(20),
@@ -39,10 +37,9 @@ class JobCard extends StatelessWidget {
                   child: Text(
                     job.formattedDeadline,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -61,35 +58,28 @@ class JobCard extends StatelessWidget {
             Text(
               job.clientName,
               style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
             const Divider(color: AppColors.divider, height: 1),
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(
-                  Icons.inventory_2_outlined,
-                  size: 16,
-                  color: AppColors.textDisabled,
-                ),
+                const Icon(Icons.inventory_2_outlined,
+                    size: 16, color: AppColors.textDisabled),
                 const SizedBox(width: 6),
                 Text(
                   '${job.totalQuantity} units',
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 const Spacer(),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textDisabled,
-                ),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textDisabled),
               ],
             ),
           ],
@@ -130,35 +120,24 @@ class _JobBottomSheetState extends State<JobBottomSheet> {
       if (mounted) {
         widget.onJobClaimed();
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Job claimed! Get to work. 💪',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            backgroundColor: const Color(0xFF222222),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
-            ),
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Job claimed! Get to work. 💪',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          backgroundColor: const Color(0xFF222222),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill)),
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        ));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
               e.toString().replaceFirst('Exception: ', ''),
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: AppColors.offline,
-          ),
-        );
+              style: const TextStyle(color: Colors.white)),
+          backgroundColor: AppColors.offline,
+        ));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -198,18 +177,14 @@ class _JobBottomSheetState extends State<JobBottomSheet> {
           Text(
             j.clientName,
             style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
+                fontSize: 16,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 28),
 
-          _row(
-            Icons.inventory_2_outlined,
-            'Total Quantity',
-            '${j.totalQuantity} units',
-          ),
+          _row(Icons.inventory_2_outlined, 'Total Quantity',
+              '${j.totalQuantity} units'),
           const SizedBox(height: 14),
           _row(Icons.calendar_today_rounded, 'Deadline', j.formattedDeadline),
 
@@ -224,13 +199,9 @@ class _JobBottomSheetState extends State<JobBottomSheet> {
                 style: AppTheme.pillButtonStyle(),
                 child: _loading
                     ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                        width: 22, height: 22,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
+                            color: Colors.white, strokeWidth: 2.5))
                     : const Text('Claim This Job'),
               ),
             )
@@ -246,10 +217,9 @@ class _JobBottomSheetState extends State<JobBottomSheet> {
               child: Text(
                 'Already Taken',
                 style: TextStyle(
-                  color: AppColors.textDisabled,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
+                    color: AppColors.textDisabled,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16),
               ),
             ),
         ],
@@ -272,22 +242,16 @@ class _JobBottomSheetState extends State<JobBottomSheet> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textDisabled,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textDisabled,
+                    fontWeight: FontWeight.w500)),
+            Text(value,
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary)),
           ],
         ),
       ],

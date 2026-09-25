@@ -5,8 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // ── Desktop entry (unchanged) ───────────────────────────────────────────────
 import 'package:optiflow_scheduler/slices/engine/dashboard/dashboard_screen.dart';
 
-// ── New Mobile entry (Worker Job Allocation & Execution) ────────────────────
-import 'package:optiflow_scheduler/slices/worker/mobile_login_screen.dart';
+// ── New Mobile entry (complete rebuild) ─────────────────────────────────────
 import 'mobile/core/app_theme.dart';
 import 'mobile/core/auth_service.dart';
 import 'mobile/screens/login_screen.dart';
@@ -38,14 +37,17 @@ class DesktopEntry extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mobile entry widget — routes directly to Worker Mobile Station Login
+// Mobile entry widget — checks Supabase session and routes accordingly.
 // ─────────────────────────────────────────────────────────────────────────────
 class MobileEntry extends StatelessWidget {
   const MobileEntry({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MobileLoginScreen();
+    // If there's already a valid session, skip login and go straight to hub.
+    return AuthService.instance.isAuthenticated
+        ? const MainHub()
+        : const LoginScreen();
   }
 }
 
@@ -63,9 +65,9 @@ class MyApp extends StatelessWidget {
     final desktopTheme = ThemeData.dark().copyWith(
       scaffoldBackgroundColor: const Color(0xFF141518),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF5E6AD2),
+        primary:   Color(0xFF5E6AD2),
         secondary: Color(0xFF8B75D7),
-        surface: Color(0xFF1A1B1E),
+        surface:   Color(0xFF1A1B1E),
       ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(const Color(0xFF2C2C2E)),
@@ -77,9 +79,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'OptiFlow',
-      theme: AppTheme.theme,
-      darkTheme: desktopTheme,
-      themeMode: ThemeMode.dark,
+      theme:      AppTheme.theme,
+      darkTheme:  desktopTheme,
+      themeMode:  ThemeMode.dark,
       home: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= 600) {
@@ -91,4 +93,5 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+
 }
