@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:optiflow_scheduler/core/services/api_service.dart';
+import 'package:optiflow_scheduler/core/services/supabase_service.dart';
 import 'package:optiflow_scheduler/core/utils/app_colors.dart';
 
 class TaskItem {
@@ -11,6 +12,13 @@ class TaskItem {
   TextEditingController quantityController;
   String? operationType;
   List<String> dependsOn;
+  TextEditingController processingHoursController;
+  TextEditingController processingMinsController;
+  bool isBreakOn;
+  String breakType;
+  TextEditingController breakDurationController;
+  List<String> allowedResourceIds;
+  String? assignedHumanId;
 
   TaskItem({
     required this.id,
@@ -18,6 +26,13 @@ class TaskItem {
     required this.quantityController,
     this.operationType,
     required this.dependsOn,
+    required this.processingHoursController,
+    required this.processingMinsController,
+    this.isBreakOn = false,
+    this.breakType = 'MACHINE',
+    required this.breakDurationController,
+    required this.allowedResourceIds,
+    this.assignedHumanId,
   });
 }
 
@@ -32,7 +47,8 @@ class NewJobOrder extends StatefulWidget {
 class _NewJobOrderState extends State<NewJobOrder> {
   final TextEditingController _jobNameController = TextEditingController();
   final TextEditingController _clientNameController = TextEditingController();
-  final TextEditingController _totalQuantityController = TextEditingController();
+  final TextEditingController _totalQuantityController =
+      TextEditingController();
   String _priority = 'Medium';
   DateTime? _deadline;
 
@@ -41,20 +57,47 @@ class _NewJobOrderState extends State<NewJobOrder> {
 
   List<Map<String, dynamic>> _operationTypes = [];
   bool _isLoadingOps = true;
+  List<Map<String, dynamic>> _resources = [];
+  bool _isLoadingResources = true;
   bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
     _fetchOperationTypes();
+    _fetchResources();
   }
 
   Future<void> _fetchOperationTypes() async {
-    final ops = await ApiService().fetchOperationTypes();
+    final ops = await SupabaseService.instance.fetchOperationTypes();
     if (mounted) {
       setState(() {
         _operationTypes = ops;
         _isLoadingOps = false;
+      });
+    }
+  }
+
+  Future<void> _fetchResources() async {
+    // We only need active resources for restriction selection
+    final res = await ApiService().fetchHumanResources();
+    final machines = await ApiService().fetchMachines();
+    final allResources = [
+      ...res,
+      ...machines.map(
+        (m) => {
+          'id': m.id,
+          'name': m.name,
+          'type': 'MACHINE',
+          'status': m.status,
+        },
+      ),
+    ].where((r) => r['status'] == 'ACTIVE').toList();
+
+    if (mounted) {
+      setState(() {
+        _resources = allResources;
+        _isLoadingResources = false;
       });
     }
   }
@@ -66,8 +109,15 @@ class _NewJobOrderState extends State<NewJobOrder> {
           id: 'T${_taskIdCounter++}',
           nameController: TextEditingController(),
           quantityController: TextEditingController(),
-          operationType: _operationTypes.isNotEmpty ? _operationTypes.first['id'] : null,
+          operationType: _operationTypes.isNotEmpty
+              ? _operationTypes.first['id']
+              : null,
           dependsOn: [],
+          processingHoursController: TextEditingController(),
+          processingMinsController: TextEditingController(),
+          breakDurationController: TextEditingController(),
+          allowedResourceIds: [],
+          assignedHumanId: null,
         ),
       );
     });
@@ -97,7 +147,8 @@ class _NewJobOrderState extends State<NewJobOrder> {
               onPrimary: Colors.white,
               surface: AppColors.surface,
               onSurface: AppColors.textPrimary,
-            ), dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
+            ),
+            dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
           ),
           child: child!,
         );
@@ -110,7 +161,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
     }
   }
 
-  Future<void> _showMultiSelect(BuildContext context, TaskItem currentTask) async {
+  Future<void> _showMultiSelect(
+    BuildContext context,
+    TaskItem currentTask,
+  ) async {
     int currentIndex = _tasks.indexOf(currentTask);
     List<TaskItem> availableTasks = _tasks.sublist(0, currentIndex);
 
@@ -133,11 +187,16 @@ class _NewJobOrderState extends State<NewJobOrder> {
               backgroundColor: AppColors.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.5)),
+                side: BorderSide(
+                  color: AppColors.surfaceLight.withOpacity(0.5),
+                ),
               ),
               title: const Text(
                 'Select Dependencies',
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: SingleChildScrollView(
                 child: ListBody(
@@ -188,15 +247,92 @@ class _NewJobOrderState extends State<NewJobOrder> {
     );
   }
 
+  Future<void> _showResourceMultiSelect(
+    BuildContext context,
+    TaskItem currentTask,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: AppColors.surfaceLight.withOpacity(0.5),
+                ),
+              ),
+              title: const Text(
+                'Allowed Resources',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: _resources.map((res) {
+                    final isChecked = currentTask.allowedResourceIds.contains(
+                      res['id'],
+                    );
+                    return CheckboxListTile(
+                      title: Text(
+                        res['name'].toString(),
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                      value: isChecked,
+                      activeColor: AppColors.primary,
+                      checkColor: Colors.white,
+                      side: const BorderSide(color: AppColors.textSecondary),
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            currentTask.allowedResourceIds.add(res['id']);
+                          } else {
+                            currentTask.allowedResourceIds.remove(res['id']);
+                          }
+                        });
+                        setState(() {});
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _submitOrder() async {
     if (_jobNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide a job name'), backgroundColor: AppColors.error),
+        const SnackBar(
+          content: Text('Please provide a job name'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
 
-    setState(() { _isSubmitting = true; });
+    setState(() {
+      _isSubmitting = true;
+    });
 
     List<Map<String, dynamic>> tasksData = [];
     for (int i = 0; i < _tasks.length; i++) {
@@ -207,25 +343,41 @@ class _NewJobOrderState extends State<NewJobOrder> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}" '
-                  'has no operation type selected. Please assign one before submitting.'),
+              content: Text(
+                'Task "${task.nameController.text.isNotEmpty ? task.nameController.text : task.id}" '
+                'has no operation type selected. Please assign one before submitting.',
+              ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 5),
             ),
           );
         }
-        setState(() { _isSubmitting = false; });
+        setState(() {
+          _isSubmitting = false;
+        });
         return;
       }
       tasksData.add({
-        'name': task.nameController.text.isNotEmpty ? task.nameController.text : "Task ${task.id}",
+        'name': task.nameController.text.isNotEmpty
+            ? task.nameController.text
+            : "Task ${task.id}",
         'operation_type_id': task.operationType,
-        'quantity_to_process': int.tryParse(task.quantityController.text) ??
-                               int.tryParse(_totalQuantityController.text) ?? 0,
+        'quantity_to_process':
+            int.tryParse(task.quantityController.text) ??
+            int.tryParse(_totalQuantityController.text) ??
+            0,
+        'processing_time_minutes':
+            (int.tryParse(task.processingHoursController.text) ?? 0) * 60 +
+            (int.tryParse(task.processingMinsController.text) ?? 0),
+        'break_after_minutes': task.isBreakOn
+            ? (int.tryParse(task.breakDurationController.text) ?? 0)
+            : 0,
+        'break_type': task.isBreakOn ? task.breakType.toUpperCase() : 'NONE',
+        'assigned_human_id': task.assignedHumanId,
+        'allowed_resource_ids': task.allowedResourceIds,
       });
     }
-
 
     List<Map<String, dynamic>> dependencies = [];
     for (int i = 0; i < _tasks.length; i++) {
@@ -244,10 +396,15 @@ class _NewJobOrderState extends State<NewJobOrder> {
 
     Map<String, dynamic> orderData = {
       "title": _jobNameController.text,
-      "client_name": _clientNameController.text.isEmpty ? "Unknown" : _clientNameController.text,
+      "client_name": _clientNameController.text.isEmpty
+          ? "Unknown"
+          : _clientNameController.text,
       "total_quantity": int.tryParse(_totalQuantityController.text) ?? 1,
-      "deadline": _deadline?.toIso8601String() ?? DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-      "created_by": null, 
+      "priority": _priority.toUpperCase(),
+      "deadline":
+          _deadline?.toIso8601String() ??
+          DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+      "created_by": null,
       "tasks": tasksData,
       "dependencies": dependencies,
     };
@@ -297,7 +454,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
         );
       }
     } finally {
-      if (mounted) setState(() { _isSubmitting = false; });
+      if (mounted)
+        setState(() {
+          _isSubmitting = false;
+        });
     }
   }
 
@@ -309,6 +469,9 @@ class _NewJobOrderState extends State<NewJobOrder> {
     for (var task in _tasks) {
       task.nameController.dispose();
       task.quantityController.dispose();
+      task.processingHoursController.dispose();
+      task.processingMinsController.dispose();
+      task.breakDurationController.dispose();
     }
     super.dispose();
   }
@@ -385,7 +548,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 child: TextField(
                   controller: _jobNameController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Job Name', 'e.g., 500 Diaries'),
+                  decoration: _customInputDecoration(
+                    'Job Name',
+                    'e.g., 500 Diaries',
+                  ),
                 ),
               ),
               const SizedBox(width: 24),
@@ -394,7 +560,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 child: TextField(
                   controller: _clientNameController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Client Name', 'e.g., Acme Corp'),
+                  decoration: _customInputDecoration(
+                    'Client Name',
+                    'e.g., Acme Corp',
+                  ),
                 ),
               ),
             ],
@@ -409,7 +578,10 @@ class _NewJobOrderState extends State<NewJobOrder> {
                   controller: _totalQuantityController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: _customInputDecoration('Total Quantity', 'e.g., 500'),
+                  decoration: _customInputDecoration(
+                    'Total Quantity',
+                    'e.g., 500',
+                  ),
                 ),
               ),
               const SizedBox(width: 24),
@@ -419,8 +591,14 @@ class _NewJobOrderState extends State<NewJobOrder> {
                   initialValue: _priority,
                   decoration: _customInputDecoration('Priority', null),
                   dropdownColor: AppColors.surfaceLight,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.textSecondary,
+                  ),
                   items: ['High', 'Medium', 'Low'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -493,13 +671,18 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 icon: const Icon(Icons.add, color: Colors.white, size: 18),
                 label: const Text(
                   'Add Task',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.surfaceLight,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: AppColors.surfaceLight.withOpacity(0.8)),
+                    side: BorderSide(
+                      color: AppColors.surfaceLight.withOpacity(0.8),
+                    ),
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -520,7 +703,11 @@ class _NewJobOrderState extends State<NewJobOrder> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.account_tree_outlined, size: 48, color: AppColors.textSecondary.withOpacity(0.3)),
+                    Icon(
+                      Icons.account_tree_outlined,
+                      size: 48,
+                      color: AppColors.textSecondary.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'No tasks added yet. Click "Add Task" to begin.',
@@ -545,122 +732,327 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLight.withOpacity(0.2),
-                  border: Border.all(color: AppColors.surfaceLight.withOpacity(0.4)),
+                  border: Border.all(
+                    color: AppColors.surfaceLight.withOpacity(0.4),
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
                   children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 8, right: 20),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withOpacity(0.2),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.5)),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 8, right: 20),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary.withOpacity(0.2),
+                              border: Border.all(
+                                color: AppColors.primary.withOpacity(0.5),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: task.nameController,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: _customInputDecoration('Task Name', 'e.g., Print Cover'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: TextField(
-                        controller: task.quantityController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(color: AppColors.textPrimary),
-                        decoration: _customInputDecoration('Qty', 'e.g., 500'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: _isLoadingOps 
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: task.operationType,
-                        decoration: _customInputDecoration('Operation Type', null),
-                        dropdownColor: AppColors.surfaceLight,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textSecondary),
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                        items: _operationTypes.map((op) {
-                              return DropdownMenuItem<String>(
-                                value: op['id'].toString(),
-                                child: Text(op['name'].toString(), overflow: TextOverflow.ellipsis),
-                              );
-                            }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            task.operationType = newValue;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 1,
-                      child: GestureDetector(
-                        onTap: () => _showMultiSelect(context, task),
-                        child: Container(
-                          height: 56,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLight.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(12),
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: task.nameController,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: _customInputDecoration(
+                              'Task Name',
+                              'e.g., Print Cover',
+                            ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  task.dependsOn.isEmpty
-                                      ? 'Depends On'
-                                      : '${task.dependsOn.length} Selected',
-                                  style: TextStyle(
-                                    color: task.dependsOn.isEmpty
-                                        ? AppColors.textSecondary
-                                        : AppColors.textPrimary,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: task.quantityController,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: _customInputDecoration(
+                              'Qty',
+                              'e.g., 500',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: _isLoadingOps
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  initialValue: task.operationType,
+                                  decoration: _customInputDecoration(
+                                    'Operation Type',
+                                    null,
+                                  ),
+                                  dropdownColor: AppColors.surfaceLight,
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
                                     fontSize: 16,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                  items: _operationTypes.map((op) {
+                                    return DropdownMenuItem<String>(
+                                      value: op['id'].toString(),
+                                      child: Text(
+                                        op['name'].toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      task.operationType = newValue;
+                                    });
+                                  },
                                 ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () => _showMultiSelect(context, task),
+                            child: Container(
+                              height: 56,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
                               ),
-                              const Icon(Icons.link, color: AppColors.primary, size: 20),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      task.dependsOn.isEmpty
+                                          ? 'Depends On'
+                                          : '${task.dependsOn.length} Selected',
+                                      style: TextStyle(
+                                        color: task.dependsOn.isEmpty
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.link,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.error,
+                            ),
+                            onPressed: () => _removeTask(index),
+                            tooltip: 'Remove Task',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          width: 52,
+                        ), // Align with task inputs (32 width + 20 right margin)
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: task.processingHoursController,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: _customInputDecoration('Hrs', '0'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: task.processingMinsController,
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: _customInputDecoration('Min', '0'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: () =>
+                                _showResourceMultiSelect(context, task),
+                            child: Container(
+                              height: 56,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      task.allowedResourceIds.isEmpty
+                                          ? 'No Resource Restriction'
+                                          : '${task.allowedResourceIds.length} Selected',
+                                      style: TextStyle(
+                                        color: task.allowedResourceIds.isEmpty
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.precision_manufacturing,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            value: task.assignedHumanId,
+                            decoration: _customInputDecoration('Assign Minder', null),
+                            dropdownColor: AppColors.surfaceLight,
+                            icon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
+                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('No Minder', style: TextStyle(color: AppColors.textSecondary)),
+                              ),
+                              ..._resources.where((r) => r['type'] == 'HUMAN').map((res) {
+                                return DropdownMenuItem<String>(
+                                  value: res['id'].toString(),
+                                  child: Text(res['name'].toString(), overflow: TextOverflow.ellipsis),
+                                );
+                              }),
+                            ],
+                            onChanged: (newValue) {
+                              setState(() {
+                                task.assignedHumanId = newValue;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 3,
+                          child: Row(
+                            children: [
+                              Switch(
+                                value: task.isBreakOn,
+                                activeColor: AppColors.primary,
+                                onChanged: (val) =>
+                                    setState(() => task.isBreakOn = val),
+                              ),
+                              const Text(
+                                'Break',
+                                style: TextStyle(color: AppColors.textPrimary),
+                              ),
+                              if (task.isBreakOn) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 2,
+                                  child: DropdownButtonFormField<String>(
+                                    value: task.breakType,
+                                    decoration: _customInputDecoration(
+                                      'Type',
+                                      null,
+                                    ),
+                                    dropdownColor: AppColors.surfaceLight,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    items: ['MACHINE', 'HUMAN']
+                                        .map(
+                                          (e) => DropdownMenuItem(
+                                            value: e,
+                                            child: Text(e),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) =>
+                                        setState(() => task.breakType = val!),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 1,
+                                  child: TextField(
+                                    controller: task.breakDurationController,
+                                    keyboardType: TextInputType.number,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    decoration: _customInputDecoration(
+                                      'Min',
+                                      '0',
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                        ),
-                        onPressed: () => _removeTask(index),
-                        tooltip: 'Remove Task',
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -688,24 +1080,31 @@ class _NewJobOrderState extends State<NewJobOrder> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 48,
+                    vertical: 20,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: _isSubmitting 
-                  ? const SizedBox(
-                      width: 24, height: 24, 
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                    )
-                  : const Text(
-                  'Submit Order',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Order',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ),
