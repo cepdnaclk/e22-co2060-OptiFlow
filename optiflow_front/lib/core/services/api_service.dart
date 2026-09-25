@@ -151,10 +151,7 @@ class ApiService {
               ? DateTime.parse(item['scheduled_end_time']).toLocal()
               : startTime.add(const Duration(hours: 1));
 
-          // Use minutes for better resolution; Gantt renders in hours but
-          // ensure at least 1 hour block so tiny tasks are still visible.
           final durationMinutes = endTime.difference(startTime).inMinutes;
-          final durationHours = (durationMinutes / 60).ceil().clamp(1, 24);
 
           bookings.add(
             Booking(
@@ -168,7 +165,7 @@ class ApiService {
                   'Unknown Job',
               userName: 'System',
               startTime: startTime,
-              durationHours: durationHours,
+              endTime: endTime,
               priority: 'Medium',
               status: item['status'] == 'CONFLICT' ? 'CONFLICT' : 'CONFIRMED',
             ),

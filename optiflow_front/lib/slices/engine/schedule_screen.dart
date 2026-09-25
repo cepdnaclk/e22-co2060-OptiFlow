@@ -753,37 +753,51 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          _buildTimelineHeader(),
-          Divider(height: 1, color: AppColors.surfaceLight.withOpacity(0.5)),
-          if (_machines.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(48.0),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.precision_manufacturing_outlined,
-                    size: 48,
-                    color: AppColors.textSecondary.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No machines registered yet.\nGo to Machines to add one.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textSecondary.withOpacity(0.7),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: 200 + 24 * 100.0, // 200 for machine headers + 100 per hour
+          child: Column(
+            children: [
+              _buildTimelineHeader(),
+              Divider(
+                height: 1,
+                color: AppColors.surfaceLight.withOpacity(0.5),
               ),
-            )
-          else
-            ..._machines.map((machine) => _buildMachineTimelineRow(machine)),
-          Divider(height: 1, color: AppColors.surfaceLight.withOpacity(0.5)),
-          _buildTimelineFooter(),
-        ],
+              if (_machines.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(48.0),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.precision_manufacturing_outlined,
+                        size: 48,
+                        color: AppColors.textSecondary.withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No machines registered yet.\nGo to Machines to add one.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary.withOpacity(0.7),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ..._machines.map(
+                  (machine) => _buildMachineTimelineRow(machine),
+                ),
+              Divider(
+                height: 1,
+                color: AppColors.surfaceLight.withOpacity(0.5),
+              ),
+              _buildTimelineFooter(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -797,10 +811,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(11, (index) {
-                final hour = 8 + index;
+              children: List.generate(24, (index) {
+                final hour = index;
                 final ampm = hour < 12 ? "AM" : "PM";
-                final hourDisplay = hour <= 12 ? hour : hour - 12;
+                final hourDisplay = hour == 0
+                    ? 12
+                    : (hour <= 12 ? hour : hour - 12);
                 return Expanded(
                   child: Center(
                     child: Text(
@@ -890,7 +906,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: Stack(
               children: [
                 Row(
-                  children: List.generate(11, (index) {
+                  children: List.generate(24, (index) {
                     return Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -916,19 +932,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Widget _buildBookingBlock(Booking booking) {
-    final startHour = booking.startTime.hour + (booking.startTime.minute / 60);
-    final offsetStart = startHour - 8;
-    if (offsetStart < 0) return const SizedBox();
-
-    final leftPercent = offsetStart * 10;
-    final widthPercent = booking.durationHours * 10;
+    final minutesFromMidnight =
+        booking.startTime.hour * 60 + booking.startTime.minute;
+    final durationMinutes = booking.durationMinutes;
     final isConflict = booking.status == "CONFLICT";
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
-        final left = totalWidth * (leftPercent / 100) / 1.1;
-        final width = totalWidth * (widthPercent / 100) / 1.1;
+        final hourWidth = totalWidth / 24.0;
+        final left = (minutesFromMidnight / 60.0) * hourWidth;
+        final width = (durationMinutes / 60.0) * hourWidth;
 
         Color color;
         if (isConflict) {
@@ -1000,7 +1014,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ),
                       ),
                       Text(
-                        "${booking.durationHours}h • ${booking.userName}",
+                        "${booking.durationMinutes ~/ 60}h ${booking.durationMinutes % 60}m • ${booking.userName}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -1042,21 +1056,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   Widget _buildTimelineFooter() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          const Icon(
-            Icons.lightbulb_outline,
-            color: AppColors.warning,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            "Click \"New Booking\" to schedule a machine",
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(width: 24),
-          _buildLegendInd(AppColors.secondary, "Booking"),
+          _buildLegendInd(const Color(0xFF0EA5E9), "High Priority"),
+          const SizedBox(width: 16),
+          _buildLegendInd(AppColors.secondary, "Medium Priority"),
+          const SizedBox(width: 16),
+          _buildLegendInd(const Color(0xFFF97316), "Low Priority"),
           const SizedBox(width: 16),
           _buildLegendInd(AppColors.error, "Conflict"),
         ],

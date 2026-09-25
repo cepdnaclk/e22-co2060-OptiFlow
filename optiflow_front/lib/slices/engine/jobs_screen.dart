@@ -32,9 +32,13 @@ class _JobsScreenState extends State<JobsScreen> {
   Future<void> _fetchJobs() async {
     setState(() => _isLoading = true);
     final jobs = await SupabaseService.instance.fetchJobsWithTasks();
+    final filteredJobs = jobs.where((job) {
+      final status = job['status']?.toString() ?? 'DRAFT';
+      return !['SCHEDULED', 'COMPLETED', 'CANCELLED'].contains(status);
+    }).toList();
     if (mounted)
       setState(() {
-        _jobs = jobs;
+        _jobs = filteredJobs;
         _isLoading = false;
       });
   }
@@ -496,17 +500,30 @@ class _JobsScreenState extends State<JobsScreen> {
         '—';
     final resourceName =
         (task['resources'] as Map?)?['name']?.toString() ?? 'Unassigned';
+    final minderName =
+        (task['minder'] as Map?)?['name']?.toString() ?? 'No Minder Assigned';
     final taskStatus = task['status']?.toString() ?? 'PENDING';
-    final qty = task['quantity_to_process'];
+    final processingMinutes = task['processing_time_minutes'] as int? ?? 0;
+    
+    String processingTimeStr = '';
+    if (processingMinutes > 0) {
+      processingTimeStr = '${processingMinutes ~/ 60}h ${processingMinutes % 60}m';
+    } else {
+      processingTimeStr = '—';
+    }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.subdirectory_arrow_right_rounded,
-            size: 16,
-            color: AppColors.textSecondary.withOpacity(0.5),
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Icon(
+              Icons.subdirectory_arrow_right_rounded,
+              size: 16,
+              color: AppColors.textSecondary.withOpacity(0.5),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -517,12 +534,34 @@ class _JobsScreenState extends State<JobsScreen> {
                   task['name']?.toString() ?? 'Unnamed Task',
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  '$opTypeName · $qty units · $resourceName',
+                  'Operation: $opTypeName',
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  'Machine: $resourceName',
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  'Minder: $minderName',
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  'Duration: $processingTimeStr',
                   style: TextStyle(
                     color: AppColors.textSecondary.withOpacity(0.8),
                     fontSize: 12,

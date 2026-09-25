@@ -116,11 +116,17 @@ class TaskInput(BaseModel):
     operation_type_id: Optional[str] = None
     name: str
     quantity_to_process: int
+    processing_time_minutes: Optional[int] = 0
+    break_after_minutes: Optional[int] = 0
+    break_type: Optional[str] = "NONE"
+    assigned_human_id: Optional[str] = None
+    allowed_resource_ids: Optional[list[str]] = []
 
 class JobOrderInput(BaseModel):
     title: str
     client_name: Optional[str] = None
     total_quantity: int
+    priority: Optional[str] = "MEDIUM"
     deadline: str 
     created_by: Optional[str] = None
     tasks: List[TaskInput]
@@ -239,6 +245,7 @@ def create_job(order: JobOrderInput):
             "title": order.title,
             "client_name": order.client_name,
             "total_quantity": order.total_quantity,
+            "priority": order.priority,
             "deadline": order.deadline,
             "created_by": order.created_by,
             "status": "DRAFT" 
@@ -265,10 +272,22 @@ def create_job(order: JobOrderInput):
                 "operation_type_id": task.operation_type_id,
                 "name": task.name,
                 "quantity_to_process": task.quantity_to_process,
+                "processing_time_minutes": task.processing_time_minutes,
+                "break_after_minutes": task.break_after_minutes,
+                "break_type": task.break_type,
+                "assigned_human_id": task.assigned_human_id,
                 "status": "PENDING"
             }
             task_response = supabase.table("tasks").insert(task_data).execute()
-            task_uuid_map[index] = task_response.data[0]['id']
+            task_uuid = task_response.data[0]['id']
+            task_uuid_map[index] = task_uuid
+            
+            if task.allowed_resource_ids:
+                allowed_inserts = [
+                    {"task_id": task_uuid, "resource_id": r_id}
+                    for r_id in task.allowed_resource_ids
+                ]
+                supabase.table("task_allowed_resources").insert(allowed_inserts).execute()
             
         # 3. Insert into the 'task_dependencies' table (The DAG)
         dependency_inserts = []
