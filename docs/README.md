@@ -54,7 +54,9 @@ OptiFlow is an intelligent production scheduling and workflow-management system 
 
 Commercial printing and manufacturing environments handle dozens of concurrent, multi-stage production orders. A single product (such as a 5,000-unit sewn hardbound diary or school model exam papers) involves a strict sequence of dependent operations:
 
-$$\text{Order Intake} \longrightarrow \text{High-Speed Printing} \xrightarrow{\text{Ink Drying Wait}} \text{Folding} \longrightarrow \text{Sewing / Binding} \longrightarrow \text{Guillotine Cutting} \longrightarrow \text{Quality Check}$$
+```text
+Order Intake ➔ High-Speed Printing ➔ [Ink Drying Wait] ➔ Folding ➔ Sewing / Binding ➔ Guillotine Cutting ➔ Quality Check
+```
 
 Each operation requires specific machine capabilities, certified machine minders, and precise processing windows. Manually scheduling these workflows across shared equipment inevitably causes bottlenecks, idle equipment, worker confusion, and missed delivery deadlines.
 
@@ -265,29 +267,43 @@ OptiFlow is designed around standard manufacturing workflows such as sewn bookbi
 
 ### 4.2 Mathematical Formulation (CP-SAT)
 
-The optimizer models the floor as a set of jobs $J$, tasks $T$, and resources $R$.
+The optimizer models the production floor as a discrete set of Jobs, Tasks, and Resources (Machines & Minders). Each operational constraint is formulated in Google OR-Tools CP-SAT as follows:
 
-1. **Precedence Constraint with Wait Times:**
-   For task $B$ depending on predecessor $A$ with mandatory wait $\Delta_{\text{wait}}$:
-   $$\text{start}(B) \ge \text{end}(A) + \Delta_{\text{wait}}$$
+#### 1. Precedence Constraint with Mandatory Wait / Drying Times
+A successor task cannot start until its predecessor has finished and any required ink-drying or glue-curing interval has elapsed:
+```text
+Start(Task B)  ≥  End(Task A) + Mandatory_Wait_Duration
+```
+* **Real-World Impact:** Prevents wet ink from smearing during high-speed folding or binding.
 
-2. **Resource Disjunctive Constraint (No-Overlap):**
-   For any two tasks $T_i$ and $T_j$ assigned to the same machine $R_k$:
-   $$\text{Interval}(T_i) \cap \text{Interval}(T_j) = \emptyset$$
-   Implemented via OR-Tools `model.AddNoOverlap(intervals_on_resource)`.
+#### 2. Machine Disjunctive Constraint (No Overlapping Work)
+A machine can process only one task at any given time. If two tasks are assigned to the same machine, their time intervals cannot overlap:
+```text
+Interval(Task i) ∩ Interval(Task j) = ∅    (for all i ≠ j on Machine k)
+```
+* **Solver Implementation:** Enforced natively via CP-SAT's `model.AddNoOverlap(machine_intervals)`.
 
-3. **Task-Level Machine Maintenance / Cooldown:**
-   A machine break $\Delta_{\text{break}}$ extends resource unavailability after processing:
-   $$\text{release}(R_k) = \text{end}(T_i) + \Delta_{\text{break}}$$
+#### 3. Task-Level Machine Maintenance / Cooldown Break
+Heavy print runs or thermal binding cycles require post-task machine maintenance or cooldown before the machine can accept new work:
+```text
+Machine_Release_Time = Task_End_Time + Break_Duration
+```
+* **Real-World Impact:** Prevents machine overheating, provides washup periods, and extends equipment life.
 
-4. **Dual Resource Assignment (Machine + Minder):**
-   Tasks requiring both machine $M$ and human operator $H$ ensure that both resources are simultaneously available and booked for the operation window:
-   $$\text{start}(M) = \text{start}(H) \quad \text{and} \quad \text{end}(M) = \text{end}(H)$$
+#### 4. Dual-Resource Coupling (Machine + Certified Minder)
+Operations requiring both a machine and a human operator ensure both resources are booked simultaneously for the exact same interval:
+```text
+Start(Machine) = Start(Minder)   AND   End(Machine) = End(Minder)
+```
+* **Real-World Impact:** Eliminates idle machines waiting for operators and prevents workers from being double-booked.
 
-5. **Objective Function:**
-   Minimizes total makespan $C_{\max}$ combined with priority penalties for tardiness against job deadlines $D_j$:
-   $$\min \quad \alpha \cdot C_{\max} + \sum_{j \in J} w_j \cdot \max(0, \text{completion}(j) - D_j)$$
-   where $w_j \in \{3, 2, 1\}$ represents High, Medium, and Low priority weights.
+#### 5. Multi-Objective Function
+The optimizer minimizes total makespan while applying heavy penalties for late completion against customer deadlines:
+```text
+Minimize: [ α × Total_Makespan ] + Σ [ Priority_Weight(j) × Max(0, Completion_Time(j) - Deadline(j)) ]
+```
+* **Priority Weights:** High Priority ($w = 3$), Medium Priority ($w = 2$), Low Priority ($w = 1$).
+
 
 ---
 
