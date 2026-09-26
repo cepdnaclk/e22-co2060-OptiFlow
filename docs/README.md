@@ -13,7 +13,13 @@ title: OptiFlow - Intelligent Job Scheduling System
 
 **Smarter Scheduling. Smoother Production.**
 
-OptiFlow is an intelligent production scheduling and workflow-management system developed for print shops and light-manufacturing environments. It helps managers organize jobs, define production tasks, allocate machines and workers, and automatically generate practical schedules. The system reduces manual scheduling effort, prevents resource conflicts, and helps production teams complete important jobs on time.
+OptiFlow is an intelligent production scheduling and workflow-management system developed for industrial print shops and light-manufacturing facilities. It empowers plant managers to create complex multi-task jobs, configure Directed Acyclic Graph (DAG) task dependencies, allocate specialized machinery and human minders, and automatically generate optimal, conflict-free schedules using constraint programming. With a dual-interface architecture—a feature-rich Manager Desktop Dashboard and a streamlined Mobile Worker Portal—OptiFlow bridges high-level optimization with real-time floor execution.
+
+<p align="center">
+  <img src="./images/screenshots/01_command_center_dashboard.png" alt="OptiFlow Command Center LIVE Dashboard" width="100%">
+  <br>
+  <em>Figure 1: OptiFlow Command Center LIVE — Real-time shop-floor operational status, equipment utilization metrics, and activity tracking.</em>
+</p>
 
 ## Team
 
@@ -32,7 +38,7 @@ OptiFlow is an intelligent production scheduling and workflow-management system 
 
 1. [Introduction](#1-introduction)
 2. [Solution Architecture](#2-solution-architecture)
-3. [Software Design](#3-software-design)
+3. [Software Design & UI Showcase](#3-software-design--ui-showcase)
 4. [Scheduling and Optimization](#4-scheduling-and-optimization)
 5. [System Usage and Setup](#5-system-usage-and-setup)
 6. [Testing](#6-testing)
@@ -46,306 +52,242 @@ OptiFlow is an intelligent production scheduling and workflow-management system 
 
 ### 1.1 Project Overview
 
-Production environments often handle several jobs at the same time. Each job may contain multiple tasks, and every task may require a particular machine or worker. Tasks can also depend on one another. For example, a print job cannot be cut before printing is complete.
+Commercial printing and manufacturing environments handle dozens of concurrent, multi-stage production orders. A single product (such as a 5,000-unit sewn hardbound diary or school model exam papers) involves a strict sequence of dependent operations:
 
-Creating these schedules manually becomes difficult when the number of jobs, tasks, deadlines, and resources increases. OptiFlow solves this problem by collecting production details through a simple user interface and using a mathematical optimization engine to create a conflict-free schedule.
+$$\text{Order Intake} \longrightarrow \text{High-Speed Printing} \xrightarrow{\text{Ink Drying Wait}} \text{Folding} \longrightarrow \text{Sewing / Binding} \longrightarrow \text{Guillotine Cutting} \longrightarrow \text{Quality Check}$$
+
+Each operation requires specific machine capabilities, certified machine minders, and precise processing windows. Manually scheduling these workflows across shared equipment inevitably causes bottlenecks, idle equipment, worker confusion, and missed delivery deadlines.
+
+OptiFlow replaces error-prone whiteboards and spreadsheets with an automated, constraint-driven platform. It models production constraints mathematically and uses Google OR-Tools CP-SAT to calculate provably optimal or high-quality schedules in seconds.
 
 ### 1.2 Real-World Problem
 
-Manual production scheduling may cause:
+Manual production scheduling in print shops suffers from critical operational friction:
 
-- Two tasks to be assigned to the same resource at the same time.
-- Important jobs to be delayed.
-- Task dependencies to be ignored.
-- Machines or workers to remain idle unnecessarily.
-- Deadlines to be missed.
-- Managers to spend excessive time rearranging schedules.
-- Workers to receive unclear or outdated task information.
-- Machine recovery or break periods to be overlooked.
+- **Resource Conflicts:** Two urgent jobs allocated to the same press or cutter simultaneously.
+- **Dependency Violations:** Tasks starting before predecessors finish or before mandatory ink-drying intervals elapse.
+- **Machine Downtime & Overheating:** Neglecting post-task cooling, maintenance, or washup breaks.
+- **Minder Misallocation:** Jobs scheduled on machines without an available certified operator.
+- **Disconnected Shop Floor:** Floor workers receiving verbal or outdated schedules, leading to delayed job handoffs.
+- **Lack of Visibility:** Managers unable to track overall equipment effectiveness (OEE), live lead times, or fleet status.
 
 ### 1.3 Proposed Solution
 
-OptiFlow provides a centralized platform through which managers can create jobs, configure tasks, select suitable resources, and generate optimized schedules. The optimizer considers task duration, dependencies, job priority, resource capability, resource availability, existing work, and task-level machine breaks.
+OptiFlow solves these challenges by combining:
 
-The generated schedule is saved in the database and displayed through manager and worker interfaces. This allows the production team to understand what must be done, when it must start, and which resource should perform it.
+1. **Manager Command Center (Desktop):** Complete oversight over active jobs, real-time fleet health, DAG workflow creation, machine and minder assignments, and historical analytics.
+2. **1-Click Mathematical Optimization Engine (Backend):** CP-SAT constraint programming that slots tasks without overlaps, respects predecessor wait times, accounts for machine maintenance breaks, and prioritizes urgent orders.
+3. **Floor Worker Mobile Portal (Mobile):** A tailored mobile app for floor operators to view personalized shift queues ("My Tasks"), inspect machine assignments, claim unallocated work via the "Job Market", and update task execution statuses in real time.
 
-### 1.4 Objectives
+### 1.4 Main Features
 
-The main objectives of OptiFlow are to:
-
-- Reduce the time required to prepare production schedules.
-- Prevent machines and workers from being double-booked.
-- Respect task dependencies and production order.
-- Give suitable consideration to job priorities and deadlines.
-- Improve the use of available resources.
-- Display schedules clearly to managers and workers.
-- Support changes in job, task, and resource information.
-- Provide a foundation for automatic rescheduling and production analytics.
-
-### 1.5 Main Features
-
-- Creation and management of production jobs.
-- Multiple tasks within a single job.
-- Multi-job schedule generation.
-- High, medium, and low job priorities.
-- Task durations entered using hours and minutes.
-- Automatic conversion of duration values into minutes.
-- Task dependency management.
-- Optional restriction of a task to a particular resource.
-- Automatic selection of a capable resource when no restriction is given.
-- Task-level machine-break configuration.
-- Conflict-free machine and worker allocation.
-- Schedule timeline with processing and break details.
-- Manager dashboard for monitoring jobs and schedules.
-- Worker view for assigned tasks.
-- Job and task status tracking.
+- **Multi-Task Job Creation with DAG Precedence:** Define complex workflows where any task can depend on one or more previous operations with mandatory waiting times.
+- **Dual-Resource Allocation (Machine + Minder):** Assign both physical machinery and certified human workers to each stage of production.
+- **Duration Parsing (Hours & Minutes):** Intuitive time entry converted dynamically into exact processing minutes.
+- **Machine-Break & Cooldown Configuration:** Per-task cooldown or washup breaks that hold the resource before the next job can begin.
+- **Flexible Resource Constraints:** Choose strict machine restrictions or let the optimizer pick the best capable active machine.
+- **Interactive Command Center Dashboard:** Real-time metrics for total orders, pending tasks, machine uptime, and operation breakdowns.
+- **Production Analytics & OEE Tracking:** Historical lead-time tracking, defect rate monitoring, and OEE trend visualization.
+- **Mobile Worker Shift Stream:** Role-filtered task lists ("Up Next" and "Active Now") linked to the authenticated worker.
+- **Floor Job Market:** Self-service claiming of unassigned floor jobs directly from mobile devices.
 
 ---
 
 ## 2. Solution Architecture
 
-OptiFlow follows a client-server architecture with four main parts:
-
-1. A Flutter application for manager and worker interaction.
-2. A FastAPI backend for validation and business logic.
-3. A Google OR-Tools CP-SAT engine for schedule optimization.
-4. A Supabase PostgreSQL database for persistent data storage.
+OptiFlow is designed as a modular, decoupled four-tier architecture:
 
 ```text
-+---------------------------+
-| Flutter Application       |
-| Manager and Worker Views  |
-+-------------+-------------+
-              |
-              | REST API / JSON
-              v
-+---------------------------+
-| FastAPI Backend           |
-| Validation and Logic      |
-+-------------+-------------+
-              |
-       +------+------+
-       |             |
-       v             v
-+--------------+  +---------------------------+
-| Supabase     |  | Google OR-Tools CP-SAT    |
-| PostgreSQL   |  | Scheduling Optimizer      |
-+--------------+  +---------------------------+
++-------------------------------------------------------------+
+|                     PRESENTATION TIER                       |
+|  Flutter Desktop (Manager Hub)  |  Flutter Mobile (Floor)   |
+|  - Command Center Dashboard     |  - Worker Sign-In Portal  |
+|  - DAG Order & Minder Builder   |  - Personal Task Stream   |
+|  - Schedule & Analytics View    |  - Floor Job Market       |
++------------------------------+------------------------------+
+                               |
+                               | REST API / JSON (HTTP)
+                               v
++-------------------------------------------------------------+
+|                      APPLICATION TIER                       |
+|                    FastAPI Backend (Python)                 |
+|  - Pydantic Schema Validation & REST Endpoints              |
+|  - Job & Task Lifecycle Management                          |
+|  - Dual Resource & Capability Mapping                       |
+|  - Optimizer Dispatch & Response Formatting                 |
++------------------------------+------------------------------+
+                               |
+         +---------------------+---------------------+
+         |                                           |
+         v                                           v
++-------------------------------+   +-------------------------------+
+|         DATA TIER             |   |       OPTIMIZATION TIER       |
+|      Supabase PostgreSQL      |   |    Google OR-Tools CP-SAT     |
+| - Relational Schema & RLS     |   | - Constraint Programming      |
+| - Auth & Role-Based Minders   |   | - No-Overlap 2D Intervals     |
+| - Jobs, Tasks, DAG Relations  |   | - Precedence & Wait Windows   |
+| - Resource Statuses & Logs    |   | - Makespan & Priority Tuning  |
++-------------------------------+   +-------------------------------+
 ```
 
-### 2.1 Frontend
+### 2.1 Presentation Tier (Flutter & Dart)
 
-The frontend is developed using Flutter and Dart. It provides a cross-platform user interface for managers and workers.
+The frontend is built with Flutter for unified cross-platform execution on Windows Desktop (managers) and Android/iOS (floor minders). It features custom glassmorphic dark-mode styling, real-time status badges, responsive layout builders, and direct REST/Supabase client connectivity.
 
-The main frontend responsibilities are:
+### 2.2 Application Tier (FastAPI & Python)
 
-- Collecting job and task information.
-- Validating required form fields.
-- Converting entered hours and minutes into total processing minutes.
-- Loading available resources from the backend.
-- Allowing optional resource restrictions.
-- Enabling or disabling a task-level machine break.
-- Sending requests to the backend in JSON format.
-- Displaying jobs, tasks, schedules, resources, and statuses.
+The backend provides high-performance asynchronous REST endpoints. It validates incoming order structures, enforces business rules, resolves candidate capabilities for machines and workers, builds constraint definitions for the optimizer, and persists results atomically.
 
-### 2.2 Backend
+### 2.3 Data Tier (Supabase PostgreSQL)
 
-The backend is developed using Python and FastAPI. It connects the user interface, database, and optimizer.
+Supabase provides enterprise-grade PostgreSQL with real-time replication. Relational tables track:
+- `jobs`: Master orders with priorities, deadlines, and clients.
+- `tasks`: Individual production stages with durations, operation types, assigned machine IDs, and assigned minder IDs.
+- `task_dependencies`: Predecessor-successor DAG edges with mandatory wait minutes.
+- `resources`: Machine fleet and human workers with live statuses (`ACTIVE`, `MAINTENANCE`, `OFFLINE`).
+- `resource_capabilities`: Many-to-many matrix linking machines to qualified operation types.
+- `worker_machine_assignments`: Junction linking human minders to authorized machines.
 
-Its main responsibilities are:
+### 2.4 Optimization Tier (Google OR-Tools CP-SAT)
 
-- Exposing REST API endpoints.
-- Validating request data using data models.
-- Managing jobs, tasks, resources, and status updates.
-- Reading scheduling data from the database.
-- Sending scheduling constraints to the optimizer.
-- Saving generated schedule results.
-- Returning clear responses and error messages to the frontend.
-
-### 2.3 Database
-
-OptiFlow uses Supabase PostgreSQL. The database stores information such as:
-
-- Users and roles.
-- Production jobs.
-- Job priorities and deadlines.
-- Tasks and processing durations.
-- Task dependencies.
-- Machines and human resources.
-- Resource capabilities.
-- Optional resource restrictions.
-- Machine-break settings.
-- Scheduled start, processing end, and resource-release times.
-- Job and task statuses.
-
-### 2.4 Optimization Engine
-
-Google OR-Tools CP-SAT is used to solve the scheduling problem. It assigns pending tasks to suitable resources and calculates valid start and end times while satisfying the system constraints.
-
-The optimizer considers:
-
-- Processing duration.
-- Task dependencies.
-- Dependency waiting time.
-- Resource capabilities.
-- Resource restrictions.
-- Resource availability.
-- Existing scheduled or in-progress work.
-- Job priority.
-- Job deadline.
-- Task-level machine-break duration.
-- Prevention of overlapping use of the same resource.
+The optimization engine formulates production scheduling as a Constraint Satisfaction and Optimization Problem (COP). It evaluates all valid machine candidates per operation, builds non-overlapping interval variables, enforces precedence inequalities, and minimizes the global makespan weighted by job priority.
 
 ---
 
-## 3. Software Design
+## 3. Software Design & UI Showcase
 
-### 3.1 Design Goals
+### 3.1 Design Principles
 
-The system was designed with the following goals:
-
-- **Efficiency:** Generate useful schedules within a practical time.
-- **Reliability:** Validate inputs and prevent invalid scheduling states.
-- **Usability:** Present complex scheduling information in a simple form.
-- **Maintainability:** Separate the frontend, backend, optimizer, and database responsibilities.
-- **Scalability:** Support additional jobs, tasks, users, and resources.
-- **Flexibility:** Allow either automatic resource selection or a specific restriction.
-- **Consistency:** Store all schedule-related information in a central database.
+- **Separation of Concerns:** Clear demarcation between data storage, optimization logic, API routing, and user interface.
+- **Fail-Safe Scheduling:** Validation ensures tasks cannot be scheduled without valid capable resources.
+- **Live Floor Synchronization:** Mobile apps synchronize with desktop scheduling so operators see updates instantly.
+- **Visual Clarity:** Dark-mode dashboard interfaces prevent visual fatigue in high-contrast industrial environments.
 
 ### 3.2 Technology Stack
 
-| Layer | Technology | Purpose |
+| Component | Technology | Role |
 |---|---|---|
-| Frontend | Flutter and Dart | Cross-platform manager and worker interfaces |
-| Backend | FastAPI and Python | REST APIs, validation, and business logic |
-| Optimizer | Google OR-Tools CP-SAT | Constraint-based schedule generation |
-| Database | Supabase PostgreSQL | Cloud-hosted relational data storage |
-| Communication | REST and JSON | Frontend-backend data exchange |
-| Testing | Pytest and Flutter Test | Backend and frontend verification |
-| Version Control | Git and GitHub | Source-code management and collaboration |
+| **Manager Frontend** | Flutter (Desktop) | Command center, DAG order creation, analytics |
+| **Worker Frontend** | Flutter (Mobile) | Personal shift task stream, floor job market |
+| **Backend Framework** | FastAPI (Python 3.11+) | Asynchronous API, validation, business logic |
+| **Optimization Solver** | Google OR-Tools CP-SAT | Finite-domain constraint scheduling engine |
+| **Database & Auth** | Supabase (PostgreSQL) | Relational persistence, Auth tokens, RLS |
+| **State Management** | Provider / Stateful Hooks | Reactive UI updates across views |
+| **HTTP Communication** | HTTP / JSON REST | Secure payload exchange |
 
-### 3.3 Functional Modules
+---
 
-#### User Interface Module
+### 3.3 User Interface Walkthrough
 
-Provides manager and worker screens and handles user input, navigation, validation, and result presentation.
+#### 3.3.1 Manager Command Center & Live Dashboard
 
-#### Job Management Module
+The Command Center provides a high-level operational pulse of the entire manufacturing floor. Managers can monitor machine uptime gauges, active vs. offline equipment counts, total pending operations, task counts grouped by operation type, and a live activity audit feed.
 
-Allows managers to create and manage job orders containing a name, quantity, deadline, priority, and related production tasks.
+<p align="center">
+  <img src="./images/screenshots/01_command_center_dashboard.png" alt="Command Center Dashboard" width="100%">
+  <br>
+  <em>Figure 2: Manager Command Center with fleet health badges (7 Active, 1 Offline), uptime gauge, and operation distributions.</em>
+</p>
 
-#### Task Management Module
+#### 3.3.2 Advanced Job Order Builder with DAG Sequencing
 
-Stores each task's processing duration, dependency, resource requirement, resource restriction, break setting, and status.
+Creating a job order is divided into two intuitive sections:
+1. **Order Details:** Job title, client name, total print units, priority level (`HIGH`, `MEDIUM`, `LOW`), and delivery deadline date picker.
+2. **Task Sequence (DAG):** Managers can add multiple tasks, define predecessor dependencies (`Depends On`), enter duration in separate hours and minutes fields, restrict to specific machines or allow any capable machine, assign a certified human minder, and enable post-task maintenance cooldowns.
 
-#### Resource Management Module
+<p align="center">
+  <img src="./images/screenshots/02_new_job_order_dag.png" alt="New Job Order Builder with DAG" width="100%">
+  <br>
+  <em>Figure 3: Multi-task Job Order Creator supporting DAG dependencies, duration parsing, minder assignment, and cooling breaks.</em>
+</p>
 
-Maintains information about machines and human resources, including their capabilities and availability.
+#### 3.3.3 Job Management & 1-Click CP-SAT Optimization
 
-#### Optimization Module
+The **Jobs** screen lists all active and draft orders. Expanding an order reveals its sub-tasks, current execution state (`DRAFT`, `PENDING`, `SCHEDULED`, `IN_PROGRESS`, `COMPLETED`), allocated machine, and assigned minder. Clicking the purple **Optimize** button immediately invokes the backend CP-SAT solver, converting unscheduled tasks into timed machine allocations.
 
-Builds the constraint model, runs CP-SAT, selects suitable resources, and calculates a feasible or optimal schedule.
+<p align="center">
+  <img src="./images/screenshots/03_jobs_management_optimize.png" alt="Job Management and Optimization Trigger" width="100%">
+  <br>
+  <em>Figure 4: Job Management screen showing task statuses, assigned minder Sarah Chen, and the 1-click Optimize trigger.</em>
+</p>
 
-#### Schedule-Visualization Module
+#### 3.3.4 Production Analytics & OEE Reporting
 
-Displays scheduled tasks on a timeline. It shows the assigned resource, processing period, break period, job information, and task status.
+The **Analytics & Reports** module provides managers with deep insights into factory throughput. It calculates Overall Equipment Effectiveness (OEE), tracks historical lead time reductions, displays defect rates, and renders job status distribution charts over customized reporting windows (e.g., Last 30 Days).
 
-#### Worker Task Module
+<p align="center">
+  <img src="./images/screenshots/07_analytics_reports.png" alt="Analytics and Reports Screen" width="100%">
+  <br>
+  <em>Figure 5: Production Analytics tracking Overall Equipment Effectiveness (OEE) trends, average lead times, and order distribution.</em>
+</p>
 
-Allows workers to view assigned work and understand the expected production sequence.
+#### 3.3.5 Floor Worker & Minder Mobile Portal
 
-### 3.4 Main Data Flow
+Floor operators interact through a tailored mobile application that connects directly to their shift responsibilities:
+- **Floor Sign-In:** Dedicated authentication portal for machine operators and shift minders.
+- **Personalized "My Tasks" Stream:** Automatically filters tasks assigned specifically to the logged-in worker (e.g., Sarah Chen), clearly displaying the target machine (e.g., *Epson SureColor*), scheduled execution window, and unit counts.
+- **Floor Job Market:** Displays unallocated floor orders that certified workers can voluntarily claim.
 
-1. The manager enters job and task information in the Flutter application.
-2. Flutter converts the form values into a JSON request.
-3. The request is sent to the FastAPI backend.
-4. FastAPI validates and stores the information in PostgreSQL.
-5. The manager selects one or more jobs for scheduling.
-6. The backend loads jobs, tasks, dependencies, and resources.
-7. CP-SAT creates a valid schedule.
-8. The backend stores the generated start and end times.
-9. Flutter requests the result and displays it on the schedule screen.
-
-### 3.5 Task Duration
-
-Users enter a task duration using separate hours and minutes fields. The frontend converts these values into one integer before submitting the request.
-
-```text
-Total processing minutes = (hours × 60) + minutes
-```
-
-Example:
-
-```text
-Hours   = 2
-Minutes = 0
-
-Processing time = (2 × 60) + 0 = 120 minutes
-```
-
-### 3.6 Resource-Restriction Behaviour
-
-Each task can use one of two resource-selection methods:
-
-- **No Resource Restriction:** The optimizer selects any available resource that has the required capability.
-- **Restricted Resource:** The optimizer must assign the selected resource, provided that it is valid for the task.
-
-This design gives the manager control without removing the optimizer's ability to make efficient decisions.
-
-### 3.7 Task-Level Machine Break
-
-A machine break is attached to an individual task. The break begins after that task's processing period. During the break, the resource remains unavailable for another task.
-
-Example:
-
-```text
-Task processing:    09:00 - 11:00
-Task completed:     11:00
-Machine break:      11:00 - 11:05
-Resource available: 11:05
-```
-
-The task's processing end and the machine's release time are stored separately. This makes the schedule easier to understand and prevents the next task from starting during the break.
+<p align="center">
+  <img src="./images/screenshots/04_mobile_worker_signin.png" alt="Mobile Sign In" width="31%">&nbsp;
+  <img src="./images/screenshots/05_mobile_worker_tasks.png" alt="Mobile Worker Tasks" width="31%">&nbsp;
+  <img src="./images/screenshots/06_mobile_job_market.png" alt="Mobile Job Market" width="31%">
+  <br>
+  <em>Figure 6: Mobile Floor Portal — (Left) Worker Login, (Center) Personalized Task Queue for Sarah Chen, (Right) Floor Job Market.</em>
+</p>
 
 ---
 
 ## 4. Scheduling and Optimization
 
-### 4.1 Scheduling Inputs
+### 4.1 Production Routing Workflow
 
-The optimizer receives:
+OptiFlow is designed around standard manufacturing workflows such as sewn bookbinding and model paper production:
 
-- Selected job identifiers.
-- Job priorities and deadlines.
-- Pending tasks.
-- Processing durations.
-- Dependency relationships.
-- Resource capabilities.
-- Optional resource restrictions.
-- Break durations.
-- Existing scheduled and in-progress intervals.
+```text
+[ Job Order Intake ]
+        |
+        v
+[ 1. Printing ] ----------> Heidelberg Speedmaster / HP Indigo
+        |
+        v (Mandatory Ink Drying Wait: 15-30 mins)
+[ 2. Folding ] -----------> MBO Folding Machine
+        |
+        v
+[ 3. Sewing / Binding ] --> Horizon BQ-470 / Aster Sewing
+        |
+        v (Glue Curing Break: 10 mins)
+[ 4. Cutting ] -----------> Polar 115 Guillotine
+        |
+        v
+[ Completed & QC ]
+```
 
-### 4.2 Main Constraints
+### 4.2 Mathematical Formulation (CP-SAT)
 
-The schedule must satisfy the following rules:
+The optimizer models the floor as a set of jobs $J$, tasks $T$, and resources $R$.
 
-1. A task can start only after its required predecessor tasks are complete.
-2. A resource cannot process two tasks at the same time.
-3. A task must use a resource with the required capability.
-4. A restricted task must use the manager-selected resource.
-5. A machine remains blocked during its configured post-task break.
-6. Existing in-progress tasks must not be disturbed.
-7. Processing duration must remain positive and valid.
+1. **Precedence Constraint with Wait Times:**
+   For task $B$ depending on predecessor $A$ with mandatory wait $\Delta_{\text{wait}}$:
+   $$\text{start}(B) \ge \text{end}(A) + \Delta_{\text{wait}}$$
 
-### 4.3 Optimization Goals
+2. **Resource Disjunctive Constraint (No-Overlap):**
+   For any two tasks $T_i$ and $T_j$ assigned to the same machine $R_k$:
+   $$\text{Interval}(T_i) \cap \text{Interval}(T_j) = \emptyset$$
+   Implemented via OR-Tools `model.AddNoOverlap(intervals_on_resource)`.
 
-After creating the valid scheduling model, the optimizer attempts to produce the best practical result. Important jobs are considered using their priorities, while the overall schedule attempts to reduce unnecessary completion time and resource conflicts.
+3. **Task-Level Machine Maintenance / Cooldown:**
+   A machine break $\Delta_{\text{break}}$ extends resource unavailability after processing:
+   $$\text{release}(R_k) = \text{end}(T_i) + \Delta_{\text{break}}$$
 
-The backend can distinguish between:
+4. **Dual Resource Assignment (Machine + Minder):**
+   Tasks requiring both machine $M$ and human operator $H$ ensure that both resources are simultaneously available and booked for the operation window:
+   $$\text{start}(M) = \text{start}(H) \quad \text{and} \quad \text{end}(M) = \text{end}(H)$$
 
-- **Optimal:** The solver proved that the best result was found for the configured objective and time budget.
-- **Feasible:** A valid schedule was found, but optimality was not proved within the available time.
-- **Infeasible:** No schedule can satisfy all supplied constraints.
+5. **Objective Function:**
+   Minimizes total makespan $C_{\max}$ combined with priority penalties for tardiness against job deadlines $D_j$:
+   $$\min \quad \alpha \cdot C_{\max} + \sum_{j \in J} w_j \cdot \max(0, \text{completion}(j) - D_j)$$
+   where $w_j \in \{3, 2, 1\}$ represents High, Medium, and Low priority weights.
 
 ---
 
@@ -353,15 +295,13 @@ The backend can distinguish between:
 
 ### 5.1 Prerequisites
 
-Install the following tools before running the project:
+- **Python 3.11+**
+- **Flutter SDK (3.24+ / 3.47+) & Dart**
+- **Android Studio / VS Code** with Flutter & Dart extensions
+- **Supabase Account** with PostgreSQL database access
+- **Git**
 
-- Git
-- Python 3.11 or later
-- Flutter SDK and Dart
-- A supported Flutter device, emulator, or browser
-- A Supabase project with PostgreSQL access
-
-### 5.2 Clone the Repository
+### 5.2 Clone Repository
 
 ```bash
 git clone https://github.com/cepdnaclk/e22-co2060-OptiFlow.git
@@ -370,189 +310,95 @@ cd e22-co2060-OptiFlow
 
 ### 5.3 Backend Setup
 
-Move to the backend directory:
+1. Navigate to the backend directory:
+   ```bash
+   cd optiflow_back
+   ```
 
-```bash
-cd optiflow_back
-```
+2. Create and activate a Python virtual environment:
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   ```
 
-Create and activate a virtual environment.
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Windows PowerShell:
+4. Configure environment variables (`optiflow_back/.env`):
+   ```ini
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_KEY=your-supabase-anon-or-service-key
+   ```
 
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
+5. Seed demo datasets (Optional but recommended for demonstration):
+   ```bash
+   # Step 1: Wipe and seed machines, human minders, and capabilities
+   python seed_pitch_data.py
 
-Linux or macOS:
+   # Step 2: Register Supabase Auth credentials for minders (Sarah, Marcus, Elena)
+   python create_minders.py
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+   # Step 3: Insert sample un-optimized job orders for live demo
+   python seed_demo_final.py
+   ```
 
-Install the Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Configure the required environment variables using the Supabase project URL and key:
-
-```text
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_KEY=your_supabase_key
-```
-
-Apply the required SQL migrations to the configured Supabase database before using features that depend on new columns or constraints.
-
-Start the backend:
-
-```bash
-python -m uvicorn main:app --reload --port 8000
-```
-
-The local API and interactive documentation are available at:
-
-```text
-API:     http://localhost:8000
-Swagger: http://localhost:8000/docs
-```
+6. Start FastAPI server:
+   ```bash
+   uvicorn main:app --reload --port 8000
+   ```
+   * Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
 
 ### 5.4 Frontend Setup
 
-Open another terminal from the repository root:
+1. Open a new terminal from repository root:
+   ```bash
+   cd optiflow_front
+   flutter pub get
+   ```
 
-```bash
-cd optiflow_front
-flutter pub get
-```
+2. Start the desktop or mobile application:
+   ```bash
+   # Run Desktop Manager App (Windows)
+   flutter run -d windows
 
-List the available devices:
+   # Run Mobile Worker App (Connected Android Device)
+   flutter run -d <device_id>
+   ```
 
-```bash
-flutter devices
-```
-
-Run the Flutter application:
-
-```bash
-flutter run
-```
-
-If more than one device is available, use:
-
-```bash
-flutter run -d DEVICE_ID
-```
-
-Make sure the frontend API base URL points to the running backend. A physical Android device cannot normally access a computer's backend through `localhost`; use the computer's local network IP address instead.
-
-### 5.5 Creating a Job
-
-1. Sign in and open the manager dashboard.
-2. Open the new-job form.
-3. Enter the job name, quantity, deadline, and priority.
-4. Add the required production tasks.
-5. Enter each task's duration in hours and minutes.
-6. Set task dependencies where required.
-7. Select a specific resource or keep **No Resource Restriction**.
-8. Enable a machine break and enter its duration if required.
-9. Review the information and submit the job.
-
-### 5.6 Generating a Schedule
-
-1. Open the schedule-generation section.
-2. Select one or more jobs.
-3. Start the optimization process.
-4. Wait for the backend to validate the data and run CP-SAT.
-5. Review the generated task allocation and timeline.
-6. Confirm the assigned resources, processing times, break times, and statuses.
-
-### 5.7 Worker Usage
-
-Workers can open their task view to check assigned work. Each task displays the information required to understand what must be done and when it is scheduled.
+3. **1-Click Startup:**
+   On Windows, you can launch both backend and frontends simultaneously by double-clicking:
+   ```powershell
+   .\run.bat
+   ```
 
 ---
 
 ## 6. Testing
 
-OptiFlow is tested at the backend, frontend, and integration levels.
+### 6.1 Backend Test Suite
 
-### 6.1 Backend Testing
-
-The backend test suite verifies areas such as:
-
-- Input validation.
-- Task-duration handling.
-- Job priority handling.
-- Task dependencies.
-- Resource capability matching.
-- Restricted-resource selection.
-- Prevention of overlapping resource use.
-- Task-level machine breaks.
-- Existing in-progress work.
-- Solver timeout behaviour.
-- Feasible, optimal, and infeasible results.
-- Status-transition rules.
-
-Run the backend tests from the repository root:
-
-Windows PowerShell:
+The backend includes comprehensive test coverage for optimization constraints, input validation, and API routing:
 
 ```powershell
-$env:PYTHONPATH="optiflow_back"
-python -m pytest -v optiflow_back\tests
+cd optiflow_back
+$env:PYTHONPATH="."
+pytest -v tests/
 ```
 
-Linux or macOS:
+Key verification areas include:
+- `test_optimizer.py`: Precedence constraints, break interval non-overlap, and makespan minimization.
+- `test_api_endpoints.py`: CRUD endpoints, `/api/create_job`, and `/api/resources`.
+- `test_worker_allocation.py`: Worker-machine assignment resolution and role filtering.
 
-```bash
-PYTHONPATH=optiflow_back python -m pytest -v optiflow_back/tests
-```
+### 6.2 Frontend & Static Analysis
 
-### 6.2 Frontend Testing
-
-Flutter tests verify user-interface rendering, form behaviour, and important data transformations.
-
-```bash
+```powershell
 cd optiflow_front
 flutter test
-```
-
-### 6.3 Static Analysis
-
-Run Flutter's analyzer to identify code issues:
-
-```bash
-cd optiflow_front
 flutter analyze
 ```
-
-### 6.4 Integration Testing
-
-Integration testing checks the complete communication path between:
-
-- Flutter frontend and FastAPI backend.
-- FastAPI backend and Supabase PostgreSQL.
-- FastAPI backend and CP-SAT optimizer.
-- Generated schedule data and the schedule interface.
-
-### 6.5 Example Validation Scenario
-
-A useful end-to-end test is:
-
-1. Create two jobs with different priorities.
-2. Add dependent tasks to both jobs.
-3. Set one task to two hours and confirm that the submitted processing time is 120 minutes.
-4. Keep one task unrestricted and restrict another to a selected machine.
-5. Add a five-minute machine break to one task.
-6. Generate a schedule.
-7. Confirm that no resource overlaps occur.
-8. Confirm that dependencies are respected.
-9. Confirm that the next task does not start during the machine break.
-10. Confirm that the schedule screen shows the resource, processing end, break duration, and release time correctly.
 
 ---
 
@@ -560,40 +406,31 @@ A useful end-to-end test is:
 
 ### 7.1 Current Limitations
 
-- Schedule quality depends on the accuracy of the entered task and resource data.
-- Database migrations must be applied before related frontend and backend features are used.
-- A physical mobile device requires correct network configuration to connect to the local backend.
-- Very large scheduling problems may require more solver time.
-- Unexpected real-time events may still require a new optimization run.
+- **Single-Facility Scope:** The current solver models a single manufacturing plant rather than multi-site routing.
+- **Manual Reruns for Disruptions:** Real-time unexpected machine breakdowns require triggering a re-optimization run.
+- **Network Dependency:** Offline mobile clients require connectivity to synchronize completed task statuses with Supabase.
 
 ### 7.2 Future Improvements
 
-- Automatic rescheduling when a machine fails or a task is delayed.
-- Real-time notifications for managers and workers.
-- Production-performance analytics and reports.
-- Schedule comparison and what-if analysis.
-- Better prediction of task duration using historical data.
-- Resource-maintenance planning.
-- Offline support for selected mobile features.
-- Integration with inventory, costing, and order-management systems.
-- Role-based access improvements and a complete audit trail.
+- **Dynamic Reactive Rescheduling:** Webhooks that automatically shift subsequent tasks when an upstream machine reports an error.
+- **Predictive Duration Learning:** Machine learning models that refine task duration estimates based on operator historical performance.
+- **Direct IoT Machine Telemetry:** Automatic task progress updates via PLC / IoT sensor integration on printing presses.
+- **Push Notifications:** Instant mobile alerts for minders when new priority tasks are scheduled to their machines.
 
 ---
 
 ## 8. Conclusion
 
-OptiFlow provides a practical solution to the complex problem of production scheduling. It combines a cross-platform Flutter interface, a FastAPI backend, a Supabase PostgreSQL database, and the Google OR-Tools CP-SAT optimizer.
-
-The system helps managers organize multiple jobs, respect task dependencies, allocate capable resources, handle machine breaks, and view the resulting schedule clearly. Workers also receive clearer information about assigned tasks. By reducing manual effort and resource conflicts, OptiFlow supports smoother and more reliable production.
+OptiFlow demonstrates how modern constraint programming and cross-platform UI engineering can solve complex industrial production challenges. By combining Google OR-Tools CP-SAT with a responsive Flutter architecture and Supabase real-time storage, the system eliminates scheduling conflicts, respects physical operational constraints, optimizes equipment utilization, and seamlessly connects plant managers with floor workers.
 
 ---
 
 ## 9. Links
 
 - [Project Repository](https://github.com/cepdnaclk/e22-co2060-OptiFlow)
-- [Project Page](https://cepdnaclk.github.io/e22-co2060-OptiFlow/)
-- [Department of Computer Engineering](https://www.ce.pdn.ac.lk/)
-- [University of Peradeniya](https://www.pdn.ac.lk/)
+- [Project Documentation Page](https://cepdnaclk.github.io/e22-co2060-OptiFlow/)
+- [Department of Computer Engineering, University of Peradeniya](https://www.ce.pdn.ac.lk/)
+- [Faculty of Engineering](https://eng.pdn.ac.lk/)
 
 ---
 
