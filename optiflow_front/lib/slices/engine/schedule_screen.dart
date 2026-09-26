@@ -32,11 +32,61 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final machines = await _apiService.fetchMachines();
     final bookings = await _apiService.fetchBookings();
 
+    // FIX: the Gantt used to only ever show rows for resources of
+    // type == 'MACHINE'. A task the optimizer assigns straight to a
+    // HUMAN resource (e.g. a manual-folding capability) had no row to
+    // render into and silently vanished. Build the row list as the
+    // fetched machines UNION any resource actually referenced by a
+    // booking that isn't already covered.
+    final machineIds = machines.map((m) => m.id).toSet();
+    final extraRows = <Machine>[];
+    final seenExtra = <String>{};
+    for (final b in bookings) {
+      if (!machineIds.contains(b.machineId) && !seenExtra.contains(b.machineId)) {
+        seenExtra.add(b.machineId);
+        extraRows.add(Machine(id: b.machineId, name: b.machineName, status: 'ACTIVE'));
+      }
+    }
+
+    // FIX: the Gantt used to always default to "today" with no way to
+    // discover a job the optimizer scheduled onto a different day
+    // (very common once other machines are booked solid for today).
+    // If today has zero bookings but some other day does, jump there
+    // automatically and tell the user why.
+    DateTime nextSelectedDate = _selectedDate;
+    final todaysCount = bookings.where((b) =>
+        b.startTime.year == _selectedDate.year &&
+        b.startTime.month == _selectedDate.month &&
+        b.startTime.day == _selectedDate.day).length;
+
+    if (todaysCount == 0 && bookings.isNotEmpty) {
+      final sorted = [...bookings]..sort((a, b) => a.startTime.compareTo(b.startTime));
+      final upcoming = sorted.where((b) => !b.startTime.isBefore(
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)));
+      final candidate = upcoming.isNotEmpty ? upcoming.first : sorted.last;
+      nextSelectedDate = candidate.startTime;
+    }
+
     if (mounted) {
       setState(() {
-        _machines = machines;
+        _machines = [...machines, ...extraRows];
         _bookings = bookings;
         _isLoading = false;
+        if (nextSelectedDate != _selectedDate) {
+          _selectedDate = nextSelectedDate;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "No bookings today — jumped to "
+                "${DateFormat('EEE, MMM d').format(nextSelectedDate)}, "
+                "where the next scheduled work is.",
+              ),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       });
     }
   }

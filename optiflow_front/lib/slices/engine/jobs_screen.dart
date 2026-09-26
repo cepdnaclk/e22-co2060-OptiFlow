@@ -72,11 +72,26 @@ class _JobsScreenState extends State<JobsScreen> {
         final quality = body['quality']?.toString() ?? 'optimal';
         final makespan = body['makespan_minutes'];
         final skipped = body['skipped_tasks'] as int? ?? 0;
+        final scheduledStartStr = body['scheduled_start']?.toString();
 
         String msg =
             '✅ Schedule ${quality == 'optimal' ? 'optimally' : 'feasibly'} computed';
         if (makespan != null) msg += ' — makespan: ${makespan} min';
         if (skipped > 0) msg += ' ($skipped task(s) skipped)';
+        // NEW: tell the manager WHEN it landed. Without this, a job pushed
+        // to tomorrow (because today's machines are already booked) looks
+        // exactly like a job that never got scheduled at all.
+        if (scheduledStartStr != null) {
+          final startLocal = DateTime.parse(scheduledStartStr).toLocal();
+          final today = DateTime.now();
+          final isToday = startLocal.year == today.year &&
+              startLocal.month == today.month &&
+              startLocal.day == today.day;
+          final dateLabel = isToday
+              ? 'today ${DateFormat('h:mm a').format(startLocal)}'
+              : DateFormat('EEE MMM d, h:mm a').format(startLocal);
+          msg += '\nStarts: $dateLabel — check the Schedule tab on that day.';
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -85,6 +100,7 @@ class _JobsScreenState extends State<JobsScreen> {
                 ? AppColors.success
                 : AppColors.warning,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
           ),
         );
         _fetchJobs();

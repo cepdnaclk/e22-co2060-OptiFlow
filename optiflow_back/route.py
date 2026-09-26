@@ -195,6 +195,8 @@ def optimize_job(job_id: str):
                 "makespan_minutes": makespan,
                 "total_cost":       result.get("total_cost", 0),
                 "skipped_tasks":    skipped,
+                "scheduled_start":  result.get("scheduled_start"),
+                "scheduled_end":    result.get("scheduled_end"),
             }
         else:
             # Return the engine's descriptive message, not a generic string

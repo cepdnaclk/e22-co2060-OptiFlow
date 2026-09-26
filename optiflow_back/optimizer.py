@@ -472,6 +472,9 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
         quality = "optimal" if status == cp_model.OPTIMAL else "feasible"
         print(f"[Optimizer] Schedule found ({quality}). Makespan: {final_makespan} mins | Cost: ${final_cost}")
 
+        scheduled_starts = []
+        scheduled_ends   = []
+
         for task in schedulable_tasks:
             t_id = task['id']
             if t_id not in task_vars:
@@ -482,6 +485,8 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
 
             actual_start = project_start_time + timedelta(minutes=start_minutes)
             actual_end   = project_start_time + timedelta(minutes=end_minutes)
+            scheduled_starts.append(actual_start)
+            scheduled_ends.append(actual_end)
 
             # Find the resource the solver chose for this task
             assigned_r_id = None
@@ -508,6 +513,11 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
             "makespan_minutes": final_makespan,
             "total_cost":       final_cost,
             "skipped_tasks":    len(skipped_tasks),
+            # NEW: tells the caller WHEN this job actually landed, so the UI
+            # can show it and the Gantt can jump to the right day instead of
+            # silently scheduling into a day nobody is looking at.
+            "scheduled_start":  min(scheduled_starts).isoformat() if scheduled_starts else None,
+            "scheduled_end":    max(scheduled_ends).isoformat() if scheduled_ends else None,
         }
 
     else:
