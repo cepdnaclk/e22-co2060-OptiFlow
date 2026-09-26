@@ -16,7 +16,7 @@ title: OptiFlow - Intelligent Job Scheduling System
 OptiFlow is an intelligent production scheduling and workflow-management system developed for industrial print shops and light-manufacturing facilities. It empowers plant managers to create complex multi-task jobs, configure Directed Acyclic Graph (DAG) task dependencies, allocate specialized machinery and human minders, and automatically generate optimal, conflict-free schedules using constraint programming. With a dual-interface architecture—a feature-rich Manager Desktop Dashboard and a streamlined Mobile Worker Portal—OptiFlow bridges high-level optimization with real-time floor execution.
 
 <p align="center">
-  <img src="./images/screenshots/01_command_center_dashboard.png" alt="OptiFlow Command Center LIVE Dashboard" width="100%">
+  <img src="./images/screenshots/01_command_center_dashboard.png" alt="OptiFlow Command Center LIVE Dashboard" width="70%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 1: OptiFlow Command Center LIVE — Real-time shop-floor operational status, equipment utilization metrics, and activity tracking.</em>
 </p>
@@ -186,7 +186,7 @@ The optimization engine formulates production scheduling as a Constraint Satisfa
 The Command Center provides a high-level operational pulse of the entire manufacturing floor. Managers can monitor machine uptime gauges, active vs. offline equipment counts, total pending operations, task counts grouped by operation type, and a live activity audit feed.
 
 <p align="center">
-  <img src="./images/screenshots/01_command_center_dashboard.png" alt="Command Center Dashboard" width="100%">
+  <img src="./images/screenshots/01_command_center_dashboard.png" alt="Command Center Dashboard" width="65%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 2: Manager Command Center with fleet health badges (7 Active, 1 Offline), uptime gauge, and operation distributions.</em>
 </p>
@@ -198,7 +198,7 @@ Creating a job order is divided into two intuitive sections:
 2. **Task Sequence (DAG):** Managers can add multiple tasks, define predecessor dependencies (`Depends On`), enter duration in separate hours and minutes fields, restrict to specific machines or allow any capable machine, assign a certified human minder, and enable post-task maintenance cooldowns.
 
 <p align="center">
-  <img src="./images/screenshots/02_new_job_order_dag.png" alt="New Job Order Builder with DAG" width="100%">
+  <img src="./images/screenshots/02_new_job_order_dag.png" alt="New Job Order Builder with DAG" width="65%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 3: Multi-task Job Order Creator supporting DAG dependencies, duration parsing, minder assignment, and cooling breaks.</em>
 </p>
@@ -208,7 +208,7 @@ Creating a job order is divided into two intuitive sections:
 The **Jobs** screen lists all active and draft orders. Expanding an order reveals its sub-tasks, current execution state (`DRAFT`, `PENDING`, `SCHEDULED`, `IN_PROGRESS`, `COMPLETED`), allocated machine, and assigned minder. Clicking the purple **Optimize** button immediately invokes the backend CP-SAT solver, converting unscheduled tasks into timed machine allocations.
 
 <p align="center">
-  <img src="./images/screenshots/03_jobs_management_optimize.png" alt="Job Management and Optimization Trigger" width="100%">
+  <img src="./images/screenshots/03_jobs_management_optimize.png" alt="Job Management and Optimization Trigger" width="65%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 4: Job Management screen showing task statuses, assigned minder Sarah Chen, and the 1-click Optimize trigger.</em>
 </p>
@@ -218,7 +218,7 @@ The **Jobs** screen lists all active and draft orders. Expanding an order reveal
 The **Analytics & Reports** module provides managers with deep insights into factory throughput. It calculates Overall Equipment Effectiveness (OEE), tracks historical lead time reductions, displays defect rates, and renders job status distribution charts over customized reporting windows (e.g., Last 30 Days).
 
 <p align="center">
-  <img src="./images/screenshots/07_analytics_reports.png" alt="Analytics and Reports Screen" width="100%">
+  <img src="./images/screenshots/07_analytics_reports.png" alt="Analytics and Reports Screen" width="65%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 5: Production Analytics tracking Overall Equipment Effectiveness (OEE) trends, average lead times, and order distribution.</em>
 </p>
@@ -231,9 +231,9 @@ Floor operators interact through a tailored mobile application that connects dir
 - **Floor Job Market:** Displays unallocated floor orders that certified workers can voluntarily claim.
 
 <p align="center">
-  <img src="./images/screenshots/04_mobile_worker_signin.png" alt="Mobile Sign In" width="31%">&nbsp;
-  <img src="./images/screenshots/05_mobile_worker_tasks.png" alt="Mobile Worker Tasks" width="31%">&nbsp;
-  <img src="./images/screenshots/06_mobile_job_market.png" alt="Mobile Job Market" width="31%">
+  <img src="./images/screenshots/04_mobile_worker_signin.png" alt="Mobile Sign In" width="24%" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">&nbsp;&nbsp;
+  <img src="./images/screenshots/05_mobile_worker_tasks.png" alt="Mobile Worker Tasks" width="24%" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">&nbsp;&nbsp;
+  <img src="./images/screenshots/06_mobile_job_market.png" alt="Mobile Job Market" width="24%" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
   <br>
   <em>Figure 6: Mobile Floor Portal — (Left) Worker Login, (Center) Personalized Task Queue for Sarah Chen, (Right) Floor Job Market.</em>
 </p>
