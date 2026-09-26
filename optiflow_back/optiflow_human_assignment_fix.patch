@@ -1,0 +1,72 @@
+diff --git a/optiflow_back/optimizer.py b/optiflow_back/optimizer.py
+index 619efbb..48e73d3 100644
+--- a/optiflow_back/optimizer.py
++++ b/optiflow_back/optimizer.py
+@@ -495,14 +495,63 @@ def run_optimization_engine(job_id: str, project_start_time: datetime, alpha: in
+                     assigned_r_id = r_id
+                     break
+ 
+-            # Commit schedule to Supabase
+-            # scheduled_end_time = task execution end (NOT break end)
+-            supabase.table("tasks").update({
++            # FIX: the mobile app filters a minder's task list on
++            # tasks.assigned_human_id (see optiflow_front HomeScreen), and the
++            # desktop worker-machine-assignments view relies on
++            # assigned_machine_id for machine-side lookups. The solver only
++            # ever picked ONE resource id (assigned_r_id) and it used to be
++            # written to assigned_resource_id alone, leaving assigned_human_id
++            # NULL forever, so every minder's phone showed zero tasks even
++            # though the Gantt was correct. Resolve the resource's type and
++            # fan the id out to the correct column(s).
++            assigned_type = None
++            if assigned_r_id is not None:
++                assigned_type = resource_types_map.get(
++                    assigned_r_id, {"type": "MACHINE"}
++                ).get("type", "MACHINE")
++
++            update_payload = {
+                 "scheduled_start_time": actual_start.isoformat(),
+                 "scheduled_end_time":   actual_end.isoformat(),
+                 "assigned_resource_id": assigned_r_id,
+                 "status":               "SCHEDULED",
+-            }).eq("id", t_id).execute()
++                # Always clear both first so re-optimizing a task that used to
++                # be human-assigned and is now machine-assigned (or vice
++                # versa) doesn't leave a stale id behind.
++                "assigned_machine_id":  None,
++                "assigned_human_id":    None,
++            }
++            if assigned_type == "HUMAN":
++                update_payload["assigned_human_id"] = assigned_r_id
++            elif assigned_r_id is not None:
++                # Default to MACHINE for anything not explicitly HUMAN,
++                # matching _res_meta's own "MACHINE" fallback above.
++                update_payload["assigned_machine_id"] = assigned_r_id
++
++                # DEMO FIX: a PRINT/FOLD/etc. task assigned to a MACHINE still
++                # needs a human minder to show up on someone's phone (PRD
++                # rule PR-SCH-02: machine + qualified minder reserved
++                # together). The solver here only ever picks one resource, so
++                # look up who is registered to operate this machine via
++                # worker_machine_assignments and attach the first match.
++                # NOTE: this is a simple v1 stand-in, not real minder-capacity
++                # scheduling — see README note below for the proper fix.
++                try:
++                    op_res = (
++                        supabase.table("worker_machine_assignments")
++                        .select("worker_id")
++                        .eq("machine_id", assigned_r_id)
++                        .limit(1)
++                        .execute()
++                    )
++                    if op_res.data:
++                        update_payload["assigned_human_id"] = op_res.data[0]["worker_id"]
++                except Exception as e:
++                    print(f"[Optimizer] Could not resolve minder for machine {assigned_r_id}: {e}")
++
++            # Commit schedule to Supabase
++            # scheduled_end_time = task execution end (NOT break end)
++            supabase.table("tasks").update(update_payload).eq("id", t_id).execute()
+ 
+         # Mark the parent job as scheduled
+         supabase.table("jobs").update({"status": "SCHEDULED"}).eq("id", job_id).execute()

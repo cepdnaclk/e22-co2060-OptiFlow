@@ -1,0 +1,23 @@
+=== OptiFlow demo seed: full sewn-book job (PRD section 6.1) ===
+  + operation_type 'SEW'
+  + resource 'Manual Sewing Station' (MACHINE)
+  + linked minder 33333333 -> machine a6d2f035
+  + linked minder 33333333 -> machine 2d40b814
+  + linked minder 33333333 -> machine fd4f7203
+  + capability 22222222 -> 1ed0719b
+  + capability 2d40b814 -> 3e726575
+  + job '2027 Student Diary — 5000 units (Sewn)' (a70d5d7f-fca5-4d44-a17a-e59de39bbe73)
+  + 4 tasks wired Print -> Fold -> Sew -> Cut (DAG)
+
+Done. Demo script:
+  1. Jobs screen -> find "2027 Student Diary — 5000 units (Sewn)" (DRAFT)
+  2. Click Optimize -> CP-SAT solves live
+  3. Schedule screen -> 4 bars appear across Press/Folder/Sewer/Cutter
+  4. Log into mobile as marcus@optiflow.com -> Print task shows up
+     Log in as sarah@optiflow.com -> Fold task shows up
+     Log in as elena@optiflow.com -> Sew + Cut tasks show up
+
+If minders still see nothing after Optimize, confirm you applied
+the optimizer.py patch that writes assigned_human_id (this was
+the root cause: the solver only ever wrote assigned_resource_id,
+but the Flutter app filters on assigned_human_id).
